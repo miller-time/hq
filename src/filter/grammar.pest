@@ -1,2 +1,6 @@
-filter = _{ SOI ~ text ~ EOI }
-text   =  { ANY+ }
+filter  = _{ SOI ~ "." ~ field ~ ("." ~ field)* ~ EOI }
+field   = _{ index | name }
+index   = _{ "[" ~ quote ~ name ~ quote ~ "]" }
+quote   = _{ "\"" | "'" }
+name    =  { id_char+ }
+id_char =  { ASCII_ALPHANUMERIC | "_" }

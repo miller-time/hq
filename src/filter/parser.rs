@@ -7,12 +7,13 @@ use pest_derive::Parser;
 #[grammar = "filter/grammar.pest"]
 pub struct Filter {}
 
-pub fn parse_filter(input: &str) -> Result<String, Box<dyn Error>> {
+pub fn parse_filter(input: &str) -> Result<Vec<String>, Box<dyn Error>> {
+    let mut names = Vec::new();
     let pairs = Filter::parse(Rule::filter, input)?;
     for pair in pairs {
-        if let Rule::text = pair.as_rule() {
-            return Ok(pair.as_str().to_owned());
+        if let Rule::name = pair.as_rule() {
+            names.push(pair.as_str().to_owned());
         }
     }
-    Err("malformed filter".into())
+    Ok(names)
 }
