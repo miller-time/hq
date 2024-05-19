@@ -5,7 +5,7 @@ use std::{
 
 use clap::Parser;
 use hcl::Body;
-use hq::{lookup::LookupResult, lookup_field, parse_filter};
+use hq::{parse_filter, query, query::QueryResult};
 
 #[derive(Parser)]
 #[command(version, about)]
@@ -25,13 +25,13 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     if let Some(filter) = args.filter {
         let mut fields = parse_filter(&filter)?;
-        let lookup_result = lookup_field(&mut fields, &body);
-        if let Some(lookup_result) = lookup_result {
+        let query_result = query(&mut fields, &body);
+        if let Some(query_result) = query_result {
             // beware `hcl::to_string`!
             // https://github.com/martinohmann/hcl-rs/issues/344
-            let s = match lookup_result {
-                LookupResult::Expr(expr) => hcl::format::to_string(&expr)?,
-                LookupResult::Body(body) => hcl::format::to_string(&body)?,
+            let s = match query_result {
+                QueryResult::Expr(expr) => hcl::format::to_string(&expr)?,
+                QueryResult::Body(body) => hcl::format::to_string(&body)?,
             };
             println!("{s}");
         }
