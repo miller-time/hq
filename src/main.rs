@@ -4,6 +4,7 @@ use std::{
 };
 
 use clap::Parser;
+use hcl::Body;
 
 #[derive(Parser)]
 #[command(version, about)]
@@ -17,5 +18,9 @@ fn main() -> Result<(), Box<dyn Error>> {
     let mut stdin = io::stdin();
     let mut buf = String::new();
     stdin.read_to_string(&mut buf)?;
+    let body: Body = hcl::from_str(&buf)?;
+    println!("HCL from stdin contained:");
+    println!(" * {} top-level attribute(s)", body.attributes().count());
+    println!(" * {} top-level block(s)", body.blocks().count());
     Ok(())
 }
