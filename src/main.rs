@@ -1,3 +1,8 @@
+use std::{
+    error::Error,
+    io::{self, Read},
+};
+
 use clap::Parser;
 
 #[derive(Parser)]
@@ -7,9 +12,10 @@ struct Args {
     filter: Option<String>,
 }
 
-fn main() {
-    let args = Args::parse();
-    if let Some(filter) = args.filter {
-        println!("filter: {filter}");
-    }
+fn main() -> Result<(), Box<dyn Error>> {
+    let _args = Args::parse();
+    let mut stdin = io::stdin();
+    let mut buf = String::new();
+    stdin.read_to_string(&mut buf)?;
+    Ok(())
 }
