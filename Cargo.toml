@@ -6,3 +6,5 @@ edition = "2021"
 [dependencies]
 clap = { version = "4.5", features = ["derive"] }
 hcl-rs = "0.17"
+pest = "2.7"
+pest_derive = "2.7"
