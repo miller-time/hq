@@ -2,8 +2,14 @@ use clap::Parser;
 
 #[derive(Parser)]
 #[command(version, about)]
-struct Args {}
+struct Args {
+    #[arg(value_name = "filter")]
+    filter: Option<String>,
+}
 
 fn main() {
-    let _args = Args::parse();
+    let args = Args::parse();
+    if let Some(filter) = args.filter {
+        println!("filter: {filter}");
+    }
 }
