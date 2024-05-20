@@ -1,6 +1,6 @@
 use std::{
     error::Error,
-    io::{self, Read},
+    io::{self, Read, Write},
 };
 
 use clap::Parser;
@@ -25,15 +25,16 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     if let Some(filter) = args.filter {
         let mut fields = parse_filter(&filter)?;
-        let query_result = query(&mut fields, &body);
-        if let Some(query_result) = query_result {
+        let query_results = query(&mut fields, &body);
+        for query_result in query_results {
             // beware `hcl::to_string`!
             // https://github.com/martinohmann/hcl-rs/issues/344
             let s = match query_result {
                 QueryResult::Expr(expr) => hcl::format::to_string(&expr)?,
                 QueryResult::Body(body) => hcl::format::to_string(&body)?,
             };
-            println!("{s}");
+            print!("{s}");
+            io::stdout().flush()?;
         }
     } else {
         println!("HCL from stdin contained:");

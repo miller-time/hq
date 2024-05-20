@@ -5,7 +5,7 @@ pub enum QueryResult {
     Body(Body),
 }
 
-pub fn query(fields: &mut Vec<String>, body: &Body) -> Option<QueryResult> {
+pub fn query(fields: &mut Vec<String>, body: &Body) -> Vec<QueryResult> {
     if fields.is_empty() {
         // our grammar/parser for filters won't allow an empty filter
         unreachable!();
@@ -26,46 +26,52 @@ pub fn query(fields: &mut Vec<String>, body: &Body) -> Option<QueryResult> {
     query_result
 }
 
-fn body_query(field: &str, body: &Body) -> Option<QueryResult> {
-    if let Some(value) = attr_query(field, body) {
-        return Some(value);
-    }
-    block_query(field, body)
+fn body_query(field: &str, body: &Body) -> Vec<QueryResult> {
+    let mut matches = Vec::new();
+    let mut attr_matches = attr_query(field, body);
+    matches.append(&mut attr_matches);
+    let mut block_matches = block_query(field, body);
+    matches.append(&mut block_matches);
+    matches
 }
 
-fn attr_query(field: &str, body: &Body) -> Option<QueryResult> {
+fn attr_query(field: &str, body: &Body) -> Vec<QueryResult> {
+    let mut matches = Vec::new();
     for attr in body.attributes() {
         if attr.key() == field {
-            return Some(QueryResult::Expr(attr.expr().clone()));
+            matches.push(QueryResult::Expr(attr.expr().clone()));
         }
     }
-    None
+    matches
 }
 
-fn block_query(field: &str, body: &Body) -> Option<QueryResult> {
+fn block_query(field: &str, body: &Body) -> Vec<QueryResult> {
+    let mut matches = Vec::new();
     for block in body.blocks() {
         if block.identifier() == field {
-            return Some(QueryResult::Body(block.body().clone()));
+            matches.push(QueryResult::Body(block.body().clone()));
         }
     }
-    None
+    matches
 }
 
-fn result_query(field: &str, query_result: Option<QueryResult>) -> Option<QueryResult> {
-    if let Some(query_result) = query_result {
+fn result_query(field: &str, query_results: Vec<QueryResult>) -> Vec<QueryResult> {
+    let mut matches = Vec::new();
+    for query_result in query_results {
         match query_result {
             QueryResult::Expr(expr) => {
                 if let Expression::Object(object) = expr {
                     let key = ObjectKey::Identifier(Identifier::new(field).unwrap());
                     if let Some(expr) = object.get(&key) {
-                        return Some(QueryResult::Expr(expr.clone()));
+                        matches.push(QueryResult::Expr(expr.clone()));
                     }
                 }
             }
             QueryResult::Body(body) => {
-                return body_query(field, &body);
+                let mut body_matches = body_query(field, &body);
+                matches.append(&mut body_matches);
             }
         }
     }
-    None
+    matches
 }
