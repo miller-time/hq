@@ -52,8 +52,12 @@ $ cat example.hcl | hq '.some_attr.foo'
 ]
 
 $ cat example.hcl | hq '.some_block'
-attr = "value"
-attr = "another_value"
+some_block "some_block_label" {
+  attr = "value"
+}
+some_block "another_block_label" {
+  attr = "another_value"
+}
 
 $ cat example.hcl | hq '.some_block[label="some_block_label"].attr'
 "value"
