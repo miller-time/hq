@@ -1,5 +1,6 @@
 # hq
 
+[![ci](https://img.shields.io/github/actions/workflow/status/miller-time/hq/rust.yml)](https://github.com/miller-time/hq/actions/workflows/rust.yml)
 [![crate](https://img.shields.io/crates/v/hq-rs)](https://crates.io/crates/hq-rs)
 [![docs](https://img.shields.io/docsrs/hq-rs)](https://docs.rs/hq-rs/latest)
 
