@@ -19,8 +19,8 @@ fn attr_query_test() -> Result<(), Box<dyn Error>> {
     let body = load_test_hcl()?;
 
     let expected = vec![
-        String::from("default = \"my_default_value\"\n"),
-        String::from("default = \"another_default_value\"\n"),
+        String::from("variable \"my_var\" {\n  default = \"my_default_value\"\n}\n"),
+        String::from("variable \"another_var\" {\n  default = \"another_default_value\"\n}\n"),
     ];
 
     let results: Vec<_> = query(&mut fields, &body)
@@ -70,8 +70,8 @@ fn block_query_test() -> Result<(), Box<dyn Error>> {
     let body = load_test_hcl()?;
 
     let expected = vec![
-        String::from("my_attr = \"my_attr_value\"\nanother_attr = \"another_attr_value\"\n"),
-        String::from("cromulent_attr = \"cromulent_value\"\n"),
+        String::from("data \"a_data_block\" \"with_some_attrs\" {\n  my_attr = \"my_attr_value\"\n  another_attr = \"another_attr_value\"\n}\n"),
+        String::from("data \"another_data_block\" \"with_some_attrs\" {\n  cromulent_attr = \"cromulent_value\"\n}\n"),
     ];
 
     let results: Vec<_> = query(&mut fields, &body)
@@ -93,7 +93,7 @@ fn label_block_query_test() -> Result<(), Box<dyn Error>> {
     }];
     let body = load_test_hcl()?;
 
-    let expected = vec![String::from("cromulent_attr = \"cromulent_value\"\n")];
+    let expected = vec![String::from("data \"another_data_block\" \"with_some_attrs\" {\n  cromulent_attr = \"cromulent_value\"\n}\n")];
 
     let results: Vec<_> = query(&mut fields, &body)
         .iter()

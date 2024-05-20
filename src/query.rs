@@ -1,19 +1,19 @@
 use std::error::Error;
 
-use hcl::{Body, Expression, Identifier, ObjectKey};
+use hcl::{Block, Body, Expression, Identifier, ObjectKey};
 
 use crate::parser::Field;
 
 pub enum QueryResult {
     Expr(Expression),
-    Body(Body),
+    Block(Block),
 }
 
 impl QueryResult {
     pub fn to_string(&self) -> Result<String, Box<dyn Error>> {
         let s = match self {
             Self::Expr(expr) => hcl::format::to_string(expr)?,
-            Self::Body(body) => hcl::format::to_string(body)?,
+            Self::Block(block) => hcl::format::to_string(block)?,
         };
         Ok(s)
     }
@@ -66,12 +66,12 @@ fn block_query(field: &Field, body: &Body) -> Vec<QueryResult> {
             continue;
         }
         if field.labels.is_empty() {
-            matches.push(QueryResult::Body(block.body().clone()));
+            matches.push(QueryResult::Block(block.clone()));
         }
         for filter_label in &field.labels {
             for block_label in block.labels() {
                 if block_label.as_str() == filter_label {
-                    matches.push(QueryResult::Body(block.body().clone()));
+                    matches.push(QueryResult::Block(block.clone()));
                 }
             }
         }
@@ -91,8 +91,8 @@ fn result_query(field: &Field, query_results: Vec<QueryResult>) -> Vec<QueryResu
                     }
                 }
             }
-            QueryResult::Body(body) => {
-                let mut body_matches = body_query(field, &body);
+            QueryResult::Block(block) => {
+                let mut body_matches = body_query(field, block.body());
                 matches.append(&mut body_matches);
             }
         }
