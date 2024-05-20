@@ -1,11 +1,13 @@
 use hcl::{Body, Expression, Identifier, ObjectKey};
 
+use crate::parser::Field;
+
 pub enum QueryResult {
     Expr(Expression),
     Body(Body),
 }
 
-pub fn query(fields: &mut Vec<String>, body: &Body) -> Vec<QueryResult> {
+pub fn query(fields: &mut Vec<Field>, body: &Body) -> Vec<QueryResult> {
     if fields.is_empty() {
         // our grammar/parser for filters won't allow an empty filter
         unreachable!();
@@ -26,9 +28,9 @@ pub fn query(fields: &mut Vec<String>, body: &Body) -> Vec<QueryResult> {
     query_result
 }
 
-fn body_query(field: &str, body: &Body) -> Vec<QueryResult> {
+fn body_query(field: &Field, body: &Body) -> Vec<QueryResult> {
     let mut matches = Vec::new();
-    let mut attr_matches = attr_query(field, body);
+    let mut attr_matches = attr_query(&field.name, body);
     matches.append(&mut attr_matches);
     let mut block_matches = block_query(field, body);
     matches.append(&mut block_matches);
@@ -45,23 +47,33 @@ fn attr_query(field: &str, body: &Body) -> Vec<QueryResult> {
     matches
 }
 
-fn block_query(field: &str, body: &Body) -> Vec<QueryResult> {
+fn block_query(field: &Field, body: &Body) -> Vec<QueryResult> {
     let mut matches = Vec::new();
     for block in body.blocks() {
-        if block.identifier() == field {
+        if block.identifier() != field.name {
+            continue;
+        }
+        if field.labels.is_empty() {
             matches.push(QueryResult::Body(block.body().clone()));
+        }
+        for filter_label in &field.labels {
+            for block_label in block.labels() {
+                if block_label.as_str() == filter_label {
+                    matches.push(QueryResult::Body(block.body().clone()));
+                }
+            }
         }
     }
     matches
 }
 
-fn result_query(field: &str, query_results: Vec<QueryResult>) -> Vec<QueryResult> {
+fn result_query(field: &Field, query_results: Vec<QueryResult>) -> Vec<QueryResult> {
     let mut matches = Vec::new();
     for query_result in query_results {
         match query_result {
             QueryResult::Expr(expr) => {
                 if let Expression::Object(object) = expr {
-                    let key = ObjectKey::Identifier(Identifier::new(field).unwrap());
+                    let key = ObjectKey::Identifier(Identifier::new(&field.name).unwrap());
                     if let Some(expr) = object.get(&key) {
                         matches.push(QueryResult::Expr(expr.clone()));
                     }

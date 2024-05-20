@@ -26,6 +26,10 @@ some_attr = {
 some_block "some_block_label" {
     attr = "value"
 }
+
+some_block "another_block_label" {
+    attr = "another_value"
+}
 ```
 
 You can query the attribute(s) and block(s) in an HCL file like so:
@@ -48,7 +52,11 @@ $ cat example.hcl | hq '.some_attr.foo'
 
 $ cat example.hcl | hq '.some_block'
 attr = "value"
+attr = "another_value"
 
-$ cat example.hcl | hq '.some_block.attr'
+$ cat example.hcl | hq '.some_block[label="some_block_label"].attr'
 "value"
+
+$ cat example.hcl | hq '.some_block[label="another_block_label"].attr'
+"another_value"
 ```

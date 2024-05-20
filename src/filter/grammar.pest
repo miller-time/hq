@@ -1,6 +1,10 @@
-filter  = _{ SOI ~ "." ~ field ~ ("." ~ field)* ~ EOI }
-field   = _{ index | name }
-index   = _{ "[" ~ quote ~ name ~ quote ~ "]" }
-quote   = _{ "\"" | "'" }
-name    =  { id_char+ }
-id_char =  { ASCII_ALPHANUMERIC | "_" }
+filter     = _{ SOI ~ "." ~ field ~ ("." ~ field)* ~ EOI }
+field      =  { (index | name) ~ labels? }
+index      = _{ "[" ~ quote ~ name ~ quote ~ "]" }
+quote      = _{ "\"" | "'" }
+name       =  { id_char+ }
+id_char    = _{ ASCII_ALPHANUMERIC | "_" }
+labels     = _{ "[" ~ label_expr ~ ("," ~ label_expr)* ~ "]" }
+label_expr = _{ "label=\"" ~ label ~ "\"" }
+label      =  { label_char+ }
+label_char = _{ ASCII_ALPHANUMERIC | " " | "_" }
