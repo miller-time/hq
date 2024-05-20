@@ -1,5 +1,8 @@
 # hq
 
+[![crate](https://img.shields.io/crates/v/hq-rs)](https://crates.io/crates/hq-rs)
+[![docs](https://img.shields.io/docsrs/hq-rs)](https://docs.rs/hq-rs/latest)
+
 `hq` is a command-line HCL processor.
 
 ## install
