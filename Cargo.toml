@@ -1,5 +1,5 @@
 [package]
-name = "hq"
+name = "hq-rs"
 version = "0.1.0"
 edition = "2021"
 

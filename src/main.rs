@@ -5,7 +5,7 @@ use std::{
 
 use clap::Parser;
 use hcl::Body;
-use hq::{parse_filter, query, query::QueryResult};
+use hq_rs::{parse_filter, query, query::QueryResult};
 
 #[derive(Parser)]
 #[command(version, about)]
