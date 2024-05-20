@@ -7,7 +7,7 @@ use pest_derive::Parser;
 #[grammar = "filter/grammar.pest"]
 pub struct Filter {}
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub struct Field {
     pub name: String,
     pub labels: Vec<String>,
@@ -39,4 +39,55 @@ pub fn parse_filter(input: &str) -> Result<Vec<Field>, Box<dyn Error>> {
         }
     }
     Ok(fields)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn name_filter() -> Result<(), Box<dyn Error>> {
+        let input = ".a_name";
+        let expected = vec![Field {
+            name: String::from("a_name"),
+            labels: Vec::new(),
+        }];
+        let fields = parse_filter(input)?;
+        assert_eq!(expected, fields);
+        Ok(())
+    }
+
+    #[test]
+    fn label_filter() -> Result<(), Box<dyn Error>> {
+        let input = ".a_name[label=\"a_label\"]";
+        let expected = vec![Field {
+            name: String::from("a_name"),
+            labels: vec![String::from("a_label")],
+        }];
+        let fields = parse_filter(input)?;
+        assert_eq!(expected, fields);
+        Ok(())
+    }
+
+    #[test]
+    fn traversal_filter() -> Result<(), Box<dyn Error>> {
+        let input = ".a_name[label=\"a_label\"].another_name[label=\"another_label\"].third_name";
+        let expected = vec![
+            Field {
+                name: String::from("a_name"),
+                labels: vec![String::from("a_label")],
+            },
+            Field {
+                name: String::from("another_name"),
+                labels: vec![String::from("another_label")],
+            },
+            Field {
+                name: String::from("third_name"),
+                labels: Vec::new(),
+            },
+        ];
+        let fields = parse_filter(input)?;
+        assert_eq!(expected, fields);
+        Ok(())
+    }
 }
