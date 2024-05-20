@@ -5,7 +5,7 @@ use std::{
 
 use clap::Parser;
 use hcl::Body;
-use hq_rs::{parse_filter, query, query::QueryResult};
+use hq_rs::{parse_filter, query};
 
 #[derive(Parser)]
 #[command(version, about)]
@@ -29,10 +29,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         for query_result in query_results {
             // beware `hcl::to_string`!
             // https://github.com/martinohmann/hcl-rs/issues/344
-            let s = match query_result {
-                QueryResult::Expr(expr) => hcl::format::to_string(&expr)?,
-                QueryResult::Body(body) => hcl::format::to_string(&body)?,
-            };
+            let s = query_result.to_string()?;
             print!("{s}");
             io::stdout().flush()?;
         }

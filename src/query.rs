@@ -1,3 +1,5 @@
+use std::error::Error;
+
 use hcl::{Body, Expression, Identifier, ObjectKey};
 
 use crate::parser::Field;
@@ -5,6 +7,16 @@ use crate::parser::Field;
 pub enum QueryResult {
     Expr(Expression),
     Body(Body),
+}
+
+impl QueryResult {
+    pub fn to_string(&self) -> Result<String, Box<dyn Error>> {
+        let s = match self {
+            Self::Expr(expr) => hcl::format::to_string(expr)?,
+            Self::Body(body) => hcl::format::to_string(body)?,
+        };
+        Ok(s)
+    }
 }
 
 pub fn query(fields: &mut Vec<Field>, body: &Body) -> Vec<QueryResult> {
