@@ -7,7 +7,7 @@ use pest_derive::Parser;
 #[grammar = "filter/grammar.pest"]
 pub struct Filter {}
 
-#[derive(Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct Field {
     pub name: String,
     pub labels: Vec<String>,

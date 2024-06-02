@@ -12,6 +12,8 @@ pub enum QueryResult {
 impl QueryResult {
     pub fn to_string(&self) -> Result<String, Box<dyn Error>> {
         let s = match self {
+            // beware `hcl::to_string`!
+            // https://github.com/martinohmann/hcl-rs/issues/344
             Self::Expr(expr) => hcl::format::to_string(expr)?,
             Self::Block(block) => hcl::format::to_string(block)?,
         };
