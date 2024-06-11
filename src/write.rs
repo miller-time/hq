@@ -1,97 +1,72 @@
-use std::error::Error;
-
-use hcl::{Attribute, Body, Expression, Identifier, ObjectKey};
+use hcl_edit::{expr::Expression, structure::Body, visit_mut::VisitMut};
 
 use crate::parser::Field;
 
-pub fn write(
+struct HclEditor<'a> {
     fields: Vec<Field>,
-    body: &mut Body,
-    value: &Expression,
-) -> Result<(), Box<dyn Error>> {
-    if fields.is_empty() {
-        // our grammar/parser for filters won't allow an empty filter
-        unreachable!();
-    }
-
-    write_body(fields, body, value)?;
-
-    Ok(())
+    next: Option<Field>,
+    value: &'a Expression,
 }
 
-fn write_body(
-    mut fields: Vec<Field>,
-    body: &mut Body,
-    value: &Expression,
-) -> Result<bool, Box<dyn Error>> {
-    let field = fields.remove(0);
+impl<'a> HclEditor<'a> {
+    fn new(fields: Vec<Field>, value: &'a Expression) -> Self {
+        HclEditor {
+            fields,
+            next: None,
+            value,
+        }
+    }
 
-    let mut matched = false;
+    fn next_field(&mut self) {
+        if self.next.is_none() && !self.fields.is_empty() {
+            self.next = Some(self.fields.remove(0));
+        }
+    }
+}
 
-    for attr in body.attributes_mut() {
-        if attr.key() == field.name {
-            if fields.is_empty() {
-                // we are done!
-                attr.expr = value.clone();
-                matched = true;
-                continue;
-            }
-            // dive! dive!
-            let expr_matched = write_expr(fields.clone(), &mut attr.expr, value);
-            if expr_matched {
-                matched = true;
+impl<'a> VisitMut for HclEditor<'a> {
+    fn visit_attr_mut(&mut self, mut node: hcl_edit::structure::AttributeMut) {
+        self.next_field();
+        // perform update if the attr key matches the field
+        if let Some(ref next) = self.next {
+            if node.key.as_str() == next.name {
+                let value = node.value_mut();
+                *value = self.value.clone();
             }
         }
     }
 
-    for block in body.blocks_mut() {
-        if block.identifier() != field.name {
-            continue;
-        }
-        if field.labels.is_empty() {
-            if fields.is_empty() {
-                return Err("unable to write expr as block body".into());
-            }
-            let block_matched = write_body(fields.clone(), &mut block.body, value)?;
-            if block_matched {
-                matched = true;
-            }
-        }
-        for filter_label in &field.labels {
-            for block_label in block.labels.clone() {
-                if block_label.as_str() == filter_label {
-                    let block_matched = write_body(fields.clone(), &mut block.body, value)?;
-                    if block_matched {
-                        matched = true;
+    fn visit_block_mut(&mut self, node: &mut hcl_edit::structure::Block) {
+        self.next_field();
+        // create a clone so that we can later mutate `self.next`
+        let next = self.next.clone();
+        if let Some(next) = next {
+            if node.ident.as_str() == next.name {
+                if next.labels.is_empty() {
+                    // the block is a match if its name matches and there are no labels
+                    // traverse to the next field
+                    self.next = Some(self.fields.remove(0));
+                    // then visit the body
+                    self.visit_body_mut(&mut node.body);
+                } else {
+                    for filter_label in &next.labels {
+                        for block_label in &node.labels {
+                            if block_label.as_str() == filter_label {
+                                // the block name and this label match the filters
+                                // traverse to the next field
+                                self.next = Some(self.fields.remove(0));
+                                // then visit the body
+                                self.visit_body_mut(&mut node.body);
+                            }
+                        }
                     }
                 }
             }
         }
     }
-
-    if !matched {
-        let new_attr = Attribute::new(field.name, value.clone());
-        let new_body = Body::builder().add_attribute(new_attr).build();
-        body.extend(new_body);
-        matched = true;
-    }
-
-    Ok(matched)
 }
 
-fn write_expr(mut fields: Vec<Field>, expr: &mut Expression, value: &Expression) -> bool {
-    let field = fields.remove(0);
-    if let Expression::Object(object) = expr {
-        let key = ObjectKey::Identifier(Identifier::new(field.name).unwrap());
-        if fields.is_empty() {
-            // we are done!
-            object.insert(key, value.clone());
-            return true;
-        }
-        if let Some(expr) = object.get_mut(&key) {
-            return write_expr(fields.clone(), expr, value);
-        }
-    }
-
-    false
+pub fn write(fields: Vec<Field>, body: &mut Body, value: &Expression) {
+    let mut visitor = HclEditor::new(fields, value);
+    visitor.visit_body_mut(body);
 }

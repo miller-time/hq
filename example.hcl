@@ -10,3 +10,13 @@ some_block "some_block_label" {
 some_block "another_block_label" {
     attr = "another_value"
 }
+
+# this is a block comment
+fmt_block "fmt_label" {
+    # this is a body comment
+    # this is another body comment
+
+    # this is a third body comment
+    first_formatted_field  = "fmt_value"
+    second_formatted_field = "second_value"
+}

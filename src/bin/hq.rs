@@ -4,7 +4,7 @@ use std::{
 };
 
 use clap::{Parser, Subcommand};
-use hcl::{Body, Expression};
+use hcl_edit::{expr::Expression, structure::Body};
 use hq_rs::{parse_filter, query, write};
 
 #[derive(Parser)]
@@ -41,10 +41,10 @@ fn main() -> Result<(), Box<dyn Error>> {
     let mut buf = String::new();
     stdin.read_to_string(&mut buf)?;
 
-    let mut body: Body = hcl::from_str(&buf)?;
-
     match args.command {
         None | Some(Command::Read) => {
+            let body: hcl::Body = hcl::from_str(&buf)?;
+
             if let Some(filter) = args.filter {
                 let mut fields = parse_filter(&filter)?;
                 let query_results = query(&mut fields, &body);
@@ -60,20 +60,16 @@ fn main() -> Result<(), Box<dyn Error>> {
             }
         }
         Some(Command::Write { value }) => {
-            let expr: Expression = hcl::to_expression(value)?;
+            let mut body: Body = buf.parse()?;
+
+            let expr: Expression = value.parse()?;
             if let Some(filter) = args.filter {
                 let fields = parse_filter(&filter)?;
-                write(fields, &mut body, &expr)?;
-                // beware `hcl::to_string`!
-                // https://github.com/martinohmann/hcl-rs/issues/344
-                let s = hcl::format::to_string(&body)?;
-                print!("{s}");
+                write(fields, &mut body, &expr);
+                print!("{body}");
                 io::stdout().flush()?;
             } else {
-                // beware `hcl::to_string`!
-                // https://github.com/martinohmann/hcl-rs/issues/344
-                let s = hcl::format::to_string(&expr)?;
-                print!("{s}");
+                print!("{expr}");
                 io::stdout().flush()?;
             }
         }
