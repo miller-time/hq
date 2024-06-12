@@ -104,3 +104,30 @@ fn label_block_query_test() -> Result<(), Box<dyn Error>> {
 
     Ok(())
 }
+
+#[test]
+fn dashed_label_block_query_test() -> Result<(), Box<dyn Error>> {
+    // filter '.module[label="cool-module"].version'
+    let mut fields = vec![
+        Field {
+            name: String::from("module"),
+            labels: vec![String::from("cool-module")],
+        },
+        Field {
+            name: String::from("version"),
+            labels: Vec::new(),
+        },
+    ];
+    let body = load_test_hcl()?;
+
+    let expected = vec![String::from("\"1.2.3\"")];
+
+    let results: Vec<_> = query(&mut fields, &body)
+        .iter()
+        .map(|r| r.to_string().unwrap())
+        .collect();
+
+    assert_eq!(expected, results);
+
+    Ok(())
+}

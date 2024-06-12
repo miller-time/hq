@@ -5,4 +5,4 @@ id_char    = _{ ASCII_ALPHANUMERIC | "_" }
 labels     = _{ "[" ~ label_expr ~ ("," ~ label_expr)* ~ "]" }
 label_expr = _{ "label=\"" ~ label ~ "\"" }
 label      =  { label_char+ }
-label_char = _{ ASCII_ALPHANUMERIC | " " | "_" }
+label_char = _{ ASCII_ALPHANUMERIC | " " | "_" | "-" }

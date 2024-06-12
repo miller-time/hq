@@ -9,3 +9,7 @@ data "a_data_block" "with_some_attrs" {
 data "another_data_block" "with_some_attrs" {
     cromulent_attr = "cromulent_value"
 }
+
+module "cool-module" {
+    version = "1.2.3"
+}
