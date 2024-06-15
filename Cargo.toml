@@ -9,6 +9,7 @@ homepage = "https://github.com/miller-time/hq"
 repository = "https://github.com/miller-time/hq"
 
 [dependencies]
+annotate-snippets = "0.11"
 clap = { version = "4.5", features = ["derive"] }
 hcl-edit = "0.8"
 hcl-rs = "0.17"
