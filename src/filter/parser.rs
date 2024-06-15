@@ -1,7 +1,7 @@
-use std::error::Error;
-
 use pest::Parser;
 use pest_derive::Parser;
+
+use super::error::FilterError;
 
 #[derive(Parser)]
 #[grammar = "filter/grammar.pest"]
@@ -13,7 +13,7 @@ pub struct Field {
     pub labels: Vec<String>,
 }
 
-pub fn parse_filter(input: &str) -> Result<Vec<Field>, Box<dyn Error>> {
+pub fn parse_filter(input: &str) -> Result<Vec<Field>, Box<FilterError<Rule>>> {
     let mut fields = Vec::new();
     let pairs = Filter::parse(Rule::filter, input)?;
     for pair in pairs {
@@ -43,6 +43,8 @@ pub fn parse_filter(input: &str) -> Result<Vec<Field>, Box<dyn Error>> {
 
 #[cfg(test)]
 mod tests {
+    use std::error::Error;
+
     use super::*;
 
     #[test]
