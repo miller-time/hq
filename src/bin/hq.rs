@@ -1,6 +1,7 @@
 use std::{
     error::Error,
     io::{self, Read, Write},
+    fs,
 };
 
 use clap::{Parser, Subcommand};
@@ -10,6 +11,9 @@ use hq_rs::{parse_filter, query, write};
 #[derive(Parser)]
 #[command(version, about)]
 struct Args {
+    #[clap(short, long, value_name = "FILE", help = "HCL file to read from")]
+    file: Option<String>,
+
     #[arg(value_name = "filter", help = "HCL filter expression")]
     filter: Option<String>,
 
@@ -37,9 +41,15 @@ impl Default for Command {
 fn main() -> Result<(), Box<dyn Error>> {
     let args = Args::parse();
 
-    let mut stdin = io::stdin();
-    let mut buf = String::new();
-    stdin.read_to_string(&mut buf)?;
+    // Read the HCL from either a file or stdin
+    let buf = if let Some(file_path) = args.file {
+        fs::read_to_string(file_path)?
+    } else {
+        let mut stdin = io::stdin();
+        let mut buf = String::new();
+        stdin.read_to_string(&mut buf)?;
+        buf
+    };
 
     match args.command {
         None | Some(Command::Read) => {
