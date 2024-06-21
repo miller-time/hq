@@ -1,7 +1,7 @@
 use std::{
     error::Error,
-    io::{self, Read, Write},
     fs,
+    io::{self, Read, Write},
 };
 
 use clap::{Parser, Subcommand};
@@ -75,7 +75,7 @@ fn main() -> Result<(), Box<dyn Error>> {
             let expr: Expression = value.parse()?;
             if let Some(filter) = args.filter {
                 let fields = parse_filter(&filter)?;
-                write(fields, &mut body, &expr);
+                write(fields, &mut body, &expr)?;
                 print!("{body}");
                 io::stdout().flush()?;
             } else {
