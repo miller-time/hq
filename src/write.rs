@@ -1,3 +1,5 @@
+use std::error::Error;
+
 use hcl_edit::{expr::Expression, structure::Body, visit_mut::VisitMut};
 
 use crate::parser::Field;
@@ -6,6 +8,7 @@ struct HclEditor<'a> {
     fields: Vec<Field>,
     next: Option<Field>,
     value: &'a Expression,
+    error: Option<Box<dyn Error>>,
 }
 
 impl<'a> HclEditor<'a> {
@@ -14,6 +17,7 @@ impl<'a> HclEditor<'a> {
             fields,
             next: None,
             value,
+            error: None,
         }
     }
 
@@ -43,6 +47,10 @@ impl<'a> VisitMut for HclEditor<'a> {
         if let Some(next) = next {
             if node.ident.as_str() == next.name {
                 if next.labels.is_empty() {
+                    if self.fields.is_empty() {
+                        self.error = Some("unable to write expr as block body".into());
+                        return;
+                    }
                     // the block is a match if its name matches and there are no labels
                     // traverse to the next field
                     self.next = Some(self.fields.remove(0));
@@ -52,6 +60,10 @@ impl<'a> VisitMut for HclEditor<'a> {
                     for filter_label in &next.labels {
                         for block_label in &node.labels {
                             if block_label.as_str() == filter_label {
+                                if self.fields.is_empty() {
+                                    self.error = Some("unable to write expr as block body".into());
+                                    return;
+                                }
                                 // the block name and this label match the filters
                                 // traverse to the next field
                                 self.next = Some(self.fields.remove(0));
@@ -66,7 +78,15 @@ impl<'a> VisitMut for HclEditor<'a> {
     }
 }
 
-pub fn write(fields: Vec<Field>, body: &mut Body, value: &Expression) {
+pub fn write(
+    fields: Vec<Field>,
+    body: &mut Body,
+    value: &Expression,
+) -> Result<(), Box<dyn Error>> {
     let mut visitor = HclEditor::new(fields, value);
     visitor.visit_body_mut(body);
+    if let Some(err) = visitor.error {
+        return Err(err);
+    }
+    Ok(())
 }
