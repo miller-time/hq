@@ -1,26 +1,52 @@
-use std::{error::Error, fs};
+use std::error::Error;
 
-use hcl::Body;
 use hq_rs::{parser::Field, query};
 
-fn load_test_hcl() -> Result<Body, Box<dyn Error>> {
-    let contents = fs::read_to_string("tests/test.tf")?;
-    let body: Body = hcl::from_str(&contents)?;
-    Ok(body)
+#[test]
+fn scalar_attr() -> Result<(), Box<dyn Error>> {
+    // filter '.version'
+    let mut fields = vec![Field::new("version")];
+    let body = utilities::read_test_hcl()?;
+
+    let expected = vec![String::from("\"test\"")];
+
+    let results: Vec<_> = query(&mut fields, &body)
+        .iter()
+        .map(|r| r.to_string().unwrap())
+        .collect();
+
+    assert_eq!(expected, results);
+
+    Ok(())
 }
 
 #[test]
-fn attr_query_test() -> Result<(), Box<dyn Error>> {
-    // filter '.variable'
-    let mut fields = vec![Field {
-        name: String::from("variable"),
-        labels: Vec::new(),
-    }];
-    let body = load_test_hcl()?;
+fn obj_attr() -> Result<(), Box<dyn Error>> {
+    // filter '.options'
+    let mut fields = vec![Field::new("options")];
+    let body = utilities::read_test_hcl()?;
+
+    let expected = vec![String::from("{\n  verbose = true\n  debug = false\n}")];
+
+    let results: Vec<_> = query(&mut fields, &body)
+        .iter()
+        .map(|r| r.to_string().unwrap())
+        .collect();
+
+    assert_eq!(expected, results);
+
+    Ok(())
+}
+
+#[test]
+fn block_attr() -> Result<(), Box<dyn Error>> {
+    // filter '.variable.default'
+    let mut fields = vec![Field::new("variable"), Field::new("default")];
+    let body = utilities::read_test_hcl()?;
 
     let expected = vec![
-        String::from("variable \"my_var\" {\n  default = \"my_default_value\"\n}\n"),
-        String::from("variable \"another_var\" {\n  default = \"another_default_value\"\n}\n"),
+        String::from("\"my_default_value\""),
+        String::from("\"another_default_value\""),
     ];
 
     let results: Vec<_> = query(&mut fields, &body)
@@ -34,19 +60,13 @@ fn attr_query_test() -> Result<(), Box<dyn Error>> {
 }
 
 #[test]
-fn label_attr_query_test() -> Result<(), Box<dyn Error>> {
+fn labeled_block_attr() -> Result<(), Box<dyn Error>> {
     // filter '.variable[label="my_var"].default'
     let mut fields = vec![
-        Field {
-            name: String::from("variable"),
-            labels: vec![String::from("my_var")],
-        },
-        Field {
-            name: String::from("default"),
-            labels: Vec::new(),
-        },
+        Field::labeled("variable", &["my_var"]),
+        Field::new("default"),
     ];
-    let body = load_test_hcl()?;
+    let body = utilities::read_test_hcl()?;
 
     let expected = vec![String::from("\"my_default_value\"")];
 
@@ -61,13 +81,10 @@ fn label_attr_query_test() -> Result<(), Box<dyn Error>> {
 }
 
 #[test]
-fn block_query_test() -> Result<(), Box<dyn Error>> {
+fn block() -> Result<(), Box<dyn Error>> {
     // filter '.data'
-    let mut fields = vec![Field {
-        name: String::from("data"),
-        labels: Vec::new(),
-    }];
-    let body = load_test_hcl()?;
+    let mut fields = vec![Field::new("data")];
+    let body = utilities::read_test_hcl()?;
 
     let expected = vec![
         String::from("data \"a_data_block\" \"with_some_attrs\" {\n  my_attr = \"my_attr_value\"\n  another_attr = \"another_attr_value\"\n}\n"),
@@ -85,13 +102,10 @@ fn block_query_test() -> Result<(), Box<dyn Error>> {
 }
 
 #[test]
-fn label_block_query_test() -> Result<(), Box<dyn Error>> {
+fn labeled_block() -> Result<(), Box<dyn Error>> {
     // filter '.data[label="another_data_block"]'
-    let mut fields = vec![Field {
-        name: String::from("data"),
-        labels: vec![String::from("another_data_block")],
-    }];
-    let body = load_test_hcl()?;
+    let mut fields = vec![Field::labeled("data", &["another_data_block"])];
+    let body = utilities::read_test_hcl()?;
 
     let expected = vec![String::from("data \"another_data_block\" \"with_some_attrs\" {\n  cromulent_attr = \"cromulent_value\"\n}\n")];
 
@@ -106,19 +120,13 @@ fn label_block_query_test() -> Result<(), Box<dyn Error>> {
 }
 
 #[test]
-fn dashed_label_block_query_test() -> Result<(), Box<dyn Error>> {
+fn dash_labeled_block() -> Result<(), Box<dyn Error>> {
     // filter '.module[label="cool-module"].version'
     let mut fields = vec![
-        Field {
-            name: String::from("module"),
-            labels: vec![String::from("cool-module")],
-        },
-        Field {
-            name: String::from("version"),
-            labels: Vec::new(),
-        },
+        Field::labeled("module", &["cool-module"]),
+        Field::new("version"),
     ];
-    let body = load_test_hcl()?;
+    let body = utilities::read_test_hcl()?;
 
     let expected = vec![String::from("\"1.2.3\"")];
 
