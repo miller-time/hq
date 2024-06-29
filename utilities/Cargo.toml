@@ -6,3 +6,4 @@ pulish = false
 
 [dependencies]
 hcl-rs = "0.17"
+hcl-edit = "0.8"
