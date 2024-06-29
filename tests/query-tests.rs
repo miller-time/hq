@@ -1,13 +1,6 @@
-use std::{error::Error, fs};
+use std::error::Error;
 
-use hcl::Body;
 use hq_rs::{parser::Field, query};
-
-fn load_test_hcl() -> Result<Body, Box<dyn Error>> {
-    let contents = fs::read_to_string("tests/test.tf")?;
-    let body: Body = hcl::from_str(&contents)?;
-    Ok(body)
-}
 
 #[test]
 fn attr_query_test() -> Result<(), Box<dyn Error>> {
@@ -16,7 +9,7 @@ fn attr_query_test() -> Result<(), Box<dyn Error>> {
         name: String::from("variable"),
         labels: Vec::new(),
     }];
-    let body = load_test_hcl()?;
+    let body = utilities::read_test_hcl()?;
 
     let expected = vec![
         String::from("variable \"my_var\" {\n  default = \"my_default_value\"\n}\n"),
@@ -46,7 +39,7 @@ fn label_attr_query_test() -> Result<(), Box<dyn Error>> {
             labels: Vec::new(),
         },
     ];
-    let body = load_test_hcl()?;
+    let body = utilities::read_test_hcl()?;
 
     let expected = vec![String::from("\"my_default_value\"")];
 
@@ -67,7 +60,7 @@ fn block_query_test() -> Result<(), Box<dyn Error>> {
         name: String::from("data"),
         labels: Vec::new(),
     }];
-    let body = load_test_hcl()?;
+    let body = utilities::read_test_hcl()?;
 
     let expected = vec![
         String::from("data \"a_data_block\" \"with_some_attrs\" {\n  my_attr = \"my_attr_value\"\n  another_attr = \"another_attr_value\"\n}\n"),
@@ -91,7 +84,7 @@ fn label_block_query_test() -> Result<(), Box<dyn Error>> {
         name: String::from("data"),
         labels: vec![String::from("another_data_block")],
     }];
-    let body = load_test_hcl()?;
+    let body = utilities::read_test_hcl()?;
 
     let expected = vec![String::from("data \"another_data_block\" \"with_some_attrs\" {\n  cromulent_attr = \"cromulent_value\"\n}\n")];
 
@@ -118,7 +111,7 @@ fn dashed_label_block_query_test() -> Result<(), Box<dyn Error>> {
             labels: Vec::new(),
         },
     ];
-    let body = load_test_hcl()?;
+    let body = utilities::read_test_hcl()?;
 
     let expected = vec![String::from("\"1.2.3\"")];
 

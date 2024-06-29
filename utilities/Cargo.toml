@@ -1,0 +1,8 @@
+[package]
+name = "utilities"
+version = "0.1.0"
+edition = "2021"
+pulish = false
+
+[dependencies]
+hcl-rs = "0.17"
