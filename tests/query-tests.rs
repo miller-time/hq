@@ -3,14 +3,14 @@ use std::error::Error;
 use hq_rs::{parser::Field, query};
 
 #[test]
-fn attr_query_test() -> Result<(), Box<dyn Error>> {
-    // filter '.variable'
-    let mut fields = vec![Field::new("variable")];
+fn block_attr() -> Result<(), Box<dyn Error>> {
+    // filter '.variable.default'
+    let mut fields = vec![Field::new("variable"), Field::new("default")];
     let body = utilities::read_test_hcl()?;
 
     let expected = vec![
-        String::from("variable \"my_var\" {\n  default = \"my_default_value\"\n}\n"),
-        String::from("variable \"another_var\" {\n  default = \"another_default_value\"\n}\n"),
+        String::from("\"my_default_value\""),
+        String::from("\"another_default_value\""),
     ];
 
     let results: Vec<_> = query(&mut fields, &body)
@@ -24,7 +24,7 @@ fn attr_query_test() -> Result<(), Box<dyn Error>> {
 }
 
 #[test]
-fn label_attr_query_test() -> Result<(), Box<dyn Error>> {
+fn labeled_block_attr() -> Result<(), Box<dyn Error>> {
     // filter '.variable[label="my_var"].default'
     let mut fields = vec![
         Field::labeled("variable", &["my_var"]),
@@ -45,7 +45,7 @@ fn label_attr_query_test() -> Result<(), Box<dyn Error>> {
 }
 
 #[test]
-fn block_query_test() -> Result<(), Box<dyn Error>> {
+fn block() -> Result<(), Box<dyn Error>> {
     // filter '.data'
     let mut fields = vec![Field::new("data")];
     let body = utilities::read_test_hcl()?;
@@ -66,7 +66,7 @@ fn block_query_test() -> Result<(), Box<dyn Error>> {
 }
 
 #[test]
-fn label_block_query_test() -> Result<(), Box<dyn Error>> {
+fn labeled_block() -> Result<(), Box<dyn Error>> {
     // filter '.data[label="another_data_block"]'
     let mut fields = vec![Field::labeled("data", &["another_data_block"])];
     let body = utilities::read_test_hcl()?;
@@ -84,7 +84,7 @@ fn label_block_query_test() -> Result<(), Box<dyn Error>> {
 }
 
 #[test]
-fn dashed_label_block_query_test() -> Result<(), Box<dyn Error>> {
+fn dash_labeled_block() -> Result<(), Box<dyn Error>> {
     // filter '.module[label="cool-module"].version'
     let mut fields = vec![
         Field::labeled("module", &["cool-module"]),
