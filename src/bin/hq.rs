@@ -5,7 +5,6 @@ use std::{
 };
 
 use clap::{Parser, Subcommand};
-use hcl_edit::{expr::Expression, structure::Body};
 use hq_rs::{parse_filter, query, write};
 
 #[derive(Parser)]
@@ -70,9 +69,9 @@ fn main() -> Result<(), Box<dyn Error>> {
             }
         }
         Some(Command::Write { value }) => {
-            let mut body: Body = buf.parse()?;
+            let mut body: hcl_edit::structure::Body = buf.parse()?;
 
-            let expr: Expression = value.parse()?;
+            let expr: hcl_edit::expr::Expression = value.parse()?;
             if let Some(filter) = args.filter {
                 let fields = parse_filter(&filter)?;
                 write(fields, &mut body, &expr)?;
