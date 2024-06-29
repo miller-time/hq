@@ -1,3 +1,9 @@
+version = "test"
+options = {
+    verbose = true
+    debug = false
+}
+
 variable "my_var" { default = "my_default_value" }
 variable "another_var" { default = "another_default_value" }
 

@@ -3,6 +3,42 @@ use std::error::Error;
 use hq_rs::{parser::Field, query};
 
 #[test]
+fn scalar_attr() -> Result<(), Box<dyn Error>> {
+    // filter '.version'
+    let mut fields = vec![Field::new("version")];
+    let body = utilities::read_test_hcl()?;
+
+    let expected = vec![String::from("\"test\"")];
+
+    let results: Vec<_> = query(&mut fields, &body)
+        .iter()
+        .map(|r| r.to_string().unwrap())
+        .collect();
+
+    assert_eq!(expected, results);
+
+    Ok(())
+}
+
+#[test]
+fn obj_attr() -> Result<(), Box<dyn Error>> {
+    // filter '.options'
+    let mut fields = vec![Field::new("options")];
+    let body = utilities::read_test_hcl()?;
+
+    let expected = vec![String::from("{\n  verbose = true\n  debug = false\n}")];
+
+    let results: Vec<_> = query(&mut fields, &body)
+        .iter()
+        .map(|r| r.to_string().unwrap())
+        .collect();
+
+    assert_eq!(expected, results);
+
+    Ok(())
+}
+
+#[test]
 fn block_attr() -> Result<(), Box<dyn Error>> {
     // filter '.variable.default'
     let mut fields = vec![Field::new("variable"), Field::new("default")];
