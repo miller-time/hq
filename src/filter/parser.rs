@@ -13,6 +13,22 @@ pub struct Field {
     pub labels: Vec<String>,
 }
 
+impl Field {
+    pub fn new(name: &str) -> Self {
+        Field {
+            name: name.to_string(),
+            labels: Vec::new(),
+        }
+    }
+
+    pub fn labeled(name: &str, labels: &[&str]) -> Self {
+        Field {
+            name: name.to_string(),
+            labels: labels.iter().map(|label| label.to_string()).collect(),
+        }
+    }
+}
+
 pub fn parse_filter(input: &str) -> Result<Vec<Field>, Box<FilterError<Rule>>> {
     let mut fields = Vec::new();
     let pairs = Filter::parse(Rule::filter, input)?;
@@ -50,10 +66,7 @@ mod tests {
     #[test]
     fn name_filter() -> Result<(), Box<dyn Error>> {
         let input = ".a_name";
-        let expected = vec![Field {
-            name: String::from("a_name"),
-            labels: Vec::new(),
-        }];
+        let expected = vec![Field::new("a_name")];
         let fields = parse_filter(input)?;
         assert_eq!(expected, fields);
         Ok(())
@@ -62,10 +75,7 @@ mod tests {
     #[test]
     fn label_filter() -> Result<(), Box<dyn Error>> {
         let input = ".a_name[label=\"a_label\"]";
-        let expected = vec![Field {
-            name: String::from("a_name"),
-            labels: vec![String::from("a_label")],
-        }];
+        let expected = vec![Field::labeled("a_name", &["a_label"])];
         let fields = parse_filter(input)?;
         assert_eq!(expected, fields);
         Ok(())
@@ -75,18 +85,9 @@ mod tests {
     fn traversal_filter() -> Result<(), Box<dyn Error>> {
         let input = ".a_name[label=\"a_label\"].another_name[label=\"another_label\"].third_name";
         let expected = vec![
-            Field {
-                name: String::from("a_name"),
-                labels: vec![String::from("a_label")],
-            },
-            Field {
-                name: String::from("another_name"),
-                labels: vec![String::from("another_label")],
-            },
-            Field {
-                name: String::from("third_name"),
-                labels: Vec::new(),
-            },
+            Field::labeled("a_name", &["a_label"]),
+            Field::labeled("another_name", &["another_label"]),
+            Field::new("third_name"),
         ];
         let fields = parse_filter(input)?;
         assert_eq!(expected, fields);
