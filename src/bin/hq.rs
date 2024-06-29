@@ -61,6 +61,9 @@ fn main() -> Result<(), Box<dyn Error>> {
                     let s = query_result.to_string()?;
                     print!("{s}");
                     io::stdout().flush()?;
+                    if !s.ends_with('\n') {
+                        println!();
+                    }
                 }
             } else {
                 println!("HCL from stdin contained:");
