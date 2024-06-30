@@ -5,5 +5,5 @@ edition = "2021"
 pulish = false
 
 [dependencies]
-hcl-rs = "0.17"
+hcl-rs = "0.18"
 hcl-edit = "0.8"
