@@ -10,7 +10,7 @@
 
 This will install an `hq` binary on your system:
 
-```
+```sh
 $ cargo install hq-rs
 ```
 
