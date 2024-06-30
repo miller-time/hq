@@ -7,9 +7,17 @@ use super::error::FilterError;
 #[grammar = "filter/grammar.pest"]
 pub struct Filter {}
 
+/// one segment of a filter ([`parse_filter`] returns `Vec<Field>`)
+///
+/// e.g. for the filter `'.foo[label="bar"].baz'` there are two segments:
+///
+/// * the name "foo" and the label "bar"
+/// * the name "baz"
 #[derive(Clone, Debug, PartialEq)]
 pub struct Field {
+    /// an attribute or block name
     pub name: String,
+    /// block labels
     pub labels: Vec<String>,
 }
 
@@ -29,6 +37,9 @@ impl Field {
     }
 }
 
+/// parse `input` and return a vector of [`Field`]s
+///
+/// a valid filter is one or more chained segments
 pub fn parse_filter(input: &str) -> Result<Vec<Field>, Box<FilterError<Rule>>> {
     let mut fields = Vec::new();
     let pairs = Filter::parse(Rule::filter, input)?;

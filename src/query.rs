@@ -1,11 +1,16 @@
+//! use the [`hcl-rs`][hcl] crate to query HCL documents
+
 use std::error::Error;
 
 use hcl::{Block, Body, Expression, Identifier, ObjectKey};
 
 use crate::parser::Field;
 
+/// a portion of an HCL document that matched the provided filter
 pub enum QueryResult {
+    /// an HCL [`Expression`] matched the filter
     Expr(Expression),
+    /// an HCL [`Block`] matched the filter
     Block(Block),
 }
 
@@ -21,6 +26,10 @@ impl QueryResult {
     }
 }
 
+/// given a vector of [`Field`]s return a vector of [`QueryResult`]s
+///
+/// a result vector with multiple results indicates that multiple entities
+/// matched the provided filter
 pub fn query(fields: &mut Vec<Field>, body: &Body) -> Vec<QueryResult> {
     if fields.is_empty() {
         // our grammar/parser for filters won't allow an empty filter

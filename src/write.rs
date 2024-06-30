@@ -1,3 +1,5 @@
+//! use the [`hcl-edit`][hcl_edit] crate to modify HCL documents
+
 use std::error::Error;
 
 use hcl_edit::{expr::Expression, structure::Body, visit_mut::VisitMut};
@@ -78,6 +80,8 @@ impl<'a> VisitMut for HclEditor<'a> {
     }
 }
 
+/// given a vector of [`Field`]s, write `value` to replace the existing
+/// [`Expression`] that matches that filter
 pub fn write(
     fields: Vec<Field>,
     body: &mut Body,
