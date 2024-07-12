@@ -11,7 +11,7 @@ use clap::{Parser, Subcommand};
 struct Args {
     // the `Read` options are duplicated here because when no command is given
     // then the `read` command is the default and its options come from the root
-    #[arg(value_name = "filter", help = "HCL filter expression")]
+    #[arg(value_name = "FILTER", help = "HCL filter expression")]
     filter: Option<String>,
 
     #[clap(short, long, value_name = "FILE", help = "HCL file to read from")]
@@ -25,22 +25,19 @@ struct Args {
 enum Command {
     #[command(about = "Read value from HCL (default)")]
     Read {
-        #[arg(value_name = "filter", help = "HCL filter expression")]
-        filter: Option<String>,
-
         #[clap(short, long, value_name = "FILE", help = "HCL file to read from")]
         file: Option<String>,
+
+        #[arg(value_name = "FILTER", help = "HCL filter expression")]
+        filter: Option<String>,
     },
     #[command(about = "Write value into HCL")]
     Write {
-        #[arg(value_name = "filter", help = "HCL filter expression")]
-        filter: Option<String>,
-
         #[clap(short, long, value_name = "FILE", help = "HCL file to read from")]
         file: Option<String>,
 
-        #[arg(required = true, help = "Value to write into HCL")]
-        value: String,
+        #[arg(required = true, help = "HCL write expression (<FILTER>=<VALUE>)")]
+        expr: String,
     },
 }
 
@@ -51,15 +48,11 @@ fn main() -> Result<(), Box<dyn Error>> {
         None => {
             read(args.filter, args.file)?;
         }
-        Some(Command::Read { filter, file }) => {
-            read(filter, file)?;
+        Some(Command::Read { file, filter }) => {
+            read(file, filter)?;
         }
-        Some(Command::Write {
-            filter,
-            file,
-            value,
-        }) => {
-            write(filter, file, value)?;
+        Some(Command::Write { file, expr }) => {
+            write(file, expr)?;
         }
     }
 
@@ -73,7 +66,7 @@ fn read_stdin() -> Result<String, Box<dyn Error>> {
     Ok(buf)
 }
 
-fn read(filter: Option<String>, file: Option<String>) -> Result<(), Box<dyn Error>> {
+fn read(file: Option<String>, filter: Option<String>) -> Result<(), Box<dyn Error>> {
     let contents = match file {
         Some(file) => fs::read_to_string(file)?,
         None => read_stdin()?,
@@ -101,28 +94,25 @@ fn read(filter: Option<String>, file: Option<String>) -> Result<(), Box<dyn Erro
     Ok(())
 }
 
-fn write(
-    filter: Option<String>,
-    file: Option<String>,
-    value: String,
-) -> Result<(), Box<dyn Error>> {
+fn write(file: Option<String>, expr: String) -> Result<(), Box<dyn Error>> {
     let contents = match file {
         Some(file) => fs::read_to_string(file)?,
         None => read_stdin()?,
     };
     let mut body: hcl_edit::structure::Body = contents.parse()?;
-    let expr: hcl_edit::expr::Expression = value.parse()?;
-    match filter {
-        Some(filter) => {
-            let fields = hq_rs::parse_filter(&filter)?;
-            hq_rs::write(fields, &mut body, &expr)?;
-            print!("{body}");
-            io::stdout().flush()?;
-        }
-        None => {
-            print!("{expr}");
-            io::stdout().flush()?;
-        }
+    if !expr.contains('=') {
+        return Err("write expression should be <FILTER>=<VALUE>".into());
     }
+    let parts: Vec<_> = expr.split('=').collect();
+    if parts.len() != 2 {
+        return Err("write expression should be <FILTER>=<VALUE>".into());
+    }
+    let filter = parts[0];
+    let new_value = parts[1];
+    let expr: hcl_edit::expr::Expression = new_value.parse()?;
+    let fields = hq_rs::parse_filter(filter)?;
+    hq_rs::write(fields, &mut body, &expr)?;
+    print!("{body}");
+    io::stdout().flush()?;
     Ok(())
 }

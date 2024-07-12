@@ -92,7 +92,7 @@ $ cat example.hcl | hq '.some_block[label="another_block_label"].attr'
 You can modify HCL (even HCL that is formatted and contains comments) like so:
 
 ```sh
-$ cat example.hcl | hq write '.fmt_block.first_formatted_field' '"something_new"'
+$ cat example.hcl | hq write '.fmt_block.first_formatted_field="something_new"'
 ```
 
 ```hcl
