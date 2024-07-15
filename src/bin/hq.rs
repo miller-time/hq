@@ -36,6 +36,9 @@ enum Command {
         #[clap(short, long, value_name = "FILE", help = "HCL file to read from")]
         file: Option<String>,
 
+        #[clap(short = 'i', long = "inline", help = "Write to HCL file inline instead of stdout (--file must also be set)")]
+        inline: bool,
+
         #[arg(required = true, help = "HCL write expression (<FILTER>=<VALUE>)")]
         expr: String,
     },
@@ -51,7 +54,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         Some(Command::Read { file, filter }) => {
             read(file, filter)?;
         }
-        Some(Command::Write { file, expr }) => {
+        Some(Command::Write { file, inline, expr }) => {
             write(file, expr)?;
         }
     }
