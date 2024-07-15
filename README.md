@@ -89,6 +89,21 @@ $ cat example.hcl | hq '.some_block[label="another_block_label"].attr'
 "another_value"
 ```
 
+Or read directly from a file by passing `read -f`:
+
+```sh
+$ hq read -f example.hcl '.some_block'
+```
+
+```hcl
+some_block "some_block_label" {
+  attr = "value"
+}
+some_block "another_block_label" {
+  attr = "another_value"
+}
+```
+
 You can modify HCL (even HCL that is formatted and contains comments) like so:
 
 ```sh
@@ -118,4 +133,15 @@ fmt_block "fmt_label" {
     first_formatted_field  = "something_new"
     second_formatted_field = "second_value"
 }
+```
+
+Modifications can also be written directly to a file by passing `-i` (inline) and `-f` (file):
+
+```sh
+$ hq write -i -f example.hcl '.fmt_block.first_formatted_field="something_written_inline"'
+```
+
+```sh
+$ hq read -f example.hcl .fmt_block.first_formatted_field
+"something_written_inline"
 ```
