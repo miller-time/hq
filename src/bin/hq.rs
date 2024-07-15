@@ -14,7 +14,7 @@ struct Args {
     #[arg(value_name = "FILTER", help = "HCL filter expression")]
     filter: Option<String>,
 
-    #[clap(short, long, value_name = "FILE", help = "HCL file to read from")]
+    #[clap(short = 'f', long = "file", value_name = "FILE", help = "HCL file to read from")]
     file: Option<String>,
 
     #[command(subcommand)]
@@ -25,7 +25,7 @@ struct Args {
 enum Command {
     #[command(about = "Read value from HCL (default)")]
     Read {
-        #[clap(short, long, value_name = "FILE", help = "HCL file to read from")]
+        #[clap(short = 'f', long = "file", value_name = "FILE", help = "HCL file to read from")]
         file: Option<String>,
 
         #[arg(value_name = "FILTER", help = "HCL filter expression")]
@@ -33,7 +33,7 @@ enum Command {
     },
     #[command(about = "Write value into HCL")]
     Write {
-        #[clap(short, long, value_name = "FILE", help = "HCL file to read from")]
+        #[clap(short = 'f', long = "file", value_name = "FILE", help = "HCL file to read from")]
         file: Option<String>,
 
         #[clap(short = 'i', long = "inline", help = "Write to HCL file inline instead of stdout (--file must also be set)")]
