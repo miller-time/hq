@@ -14,7 +14,7 @@ struct Args {
     #[arg(value_name = "FILTER", help = "HCL filter expression")]
     filter: Option<String>,
 
-    #[clap(short, long, value_name = "FILE", help = "HCL file to read from")]
+    #[clap(short = 'f', long = "file", value_name = "FILE", help = "HCL file to read from")]
     file: Option<String>,
 
     #[command(subcommand)]
@@ -25,7 +25,7 @@ struct Args {
 enum Command {
     #[command(about = "Read value from HCL (default)")]
     Read {
-        #[clap(short, long, value_name = "FILE", help = "HCL file to read from")]
+        #[clap(short = 'f', long = "file", value_name = "FILE", help = "HCL file to read from")]
         file: Option<String>,
 
         #[arg(value_name = "FILTER", help = "HCL filter expression")]
@@ -33,8 +33,11 @@ enum Command {
     },
     #[command(about = "Write value into HCL")]
     Write {
-        #[clap(short, long, value_name = "FILE", help = "HCL file to read from")]
+        #[clap(short = 'f', long = "file", value_name = "FILE", help = "HCL file to read from")]
         file: Option<String>,
+
+        #[clap(short = 'i', long = "inline", requires="file", help = "Write to HCL file inline instead of stdout (--file must also be set)")]
+        inline: bool,
 
         #[arg(required = true, help = "HCL write expression (<FILTER>=<VALUE>)")]
         expr: String,
@@ -51,8 +54,8 @@ fn main() -> Result<(), Box<dyn Error>> {
         Some(Command::Read { file, filter }) => {
             read(file, filter)?;
         }
-        Some(Command::Write { file, expr }) => {
-            write(file, expr)?;
+        Some(Command::Write { file, inline, expr }) => {
+            write(file, inline, expr)?;
         }
     }
 
@@ -94,9 +97,9 @@ fn read(file: Option<String>, filter: Option<String>) -> Result<(), Box<dyn Erro
     Ok(())
 }
 
-fn write(file: Option<String>, expr: String) -> Result<(), Box<dyn Error>> {
+fn write(file: Option<String>, inline: bool, expr: String) -> Result<(), Box<dyn Error>> {
     let contents = match file {
-        Some(file) => fs::read_to_string(file)?,
+        Some(ref file) => fs::read_to_string(file)?,
         None => read_stdin()?,
     };
     let mut body: hcl_edit::structure::Body = contents.parse()?;
@@ -112,7 +115,14 @@ fn write(file: Option<String>, expr: String) -> Result<(), Box<dyn Error>> {
     let expr: hcl_edit::expr::Expression = new_value.parse()?;
     let fields = hq_rs::parse_filter(filter)?;
     hq_rs::write(fields, &mut body, &expr)?;
-    print!("{body}");
-    io::stdout().flush()?;
+
+    if inline { // When inline is set, write the modified HCL back to the file
+        // file cannot be none here since --inline requires --file
+        fs::write(file.unwrap(), body.to_string())?;
+    } else { // Otherwise, write to stdout
+        print!("{body}");
+        io::stdout().flush()?;
+    }
+
     Ok(())
 }
