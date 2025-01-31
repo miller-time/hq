@@ -30,7 +30,7 @@ impl<'a> HclEditor<'a> {
     }
 }
 
-impl<'a> VisitMut for HclEditor<'a> {
+impl VisitMut for HclEditor<'_> {
     fn visit_attr_mut(&mut self, mut node: hcl_edit::structure::AttributeMut) {
         self.next_field();
         // perform update if the attr key matches the field

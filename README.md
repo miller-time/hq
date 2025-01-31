@@ -74,7 +74,7 @@ some_block "another_block_label" {
 ```
 
 ```sh
-$ cat example.hcl | hq '.some_block[label="some_block_label"].attr'
+$ cat example.hcl | hq '.some_block["some_block_label"].attr'
 ```
 
 ```hcl
@@ -82,7 +82,7 @@ $ cat example.hcl | hq '.some_block[label="some_block_label"].attr'
 ```
 
 ```sh
-$ cat example.hcl | hq '.some_block[label="another_block_label"].attr'
+$ cat example.hcl | hq '.some_block["another_block_label"].attr'
 ```
 
 ```hcl
