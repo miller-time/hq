@@ -96,7 +96,13 @@ fn result_query(field: &Field, query_results: Vec<QueryResult>) -> Vec<QueryResu
         match query_result {
             QueryResult::Expr(expr) => {
                 if let Expression::Object(object) = expr {
+                    // some objects are keyed with an Identifier
                     let key = ObjectKey::Identifier(Identifier::new(&field.name).unwrap());
+                    if let Some(expr) = object.get(&key) {
+                        matches.push(QueryResult::Expr(expr.clone()));
+                    }
+                    // some objects are keyed with a String Expression
+                    let key = ObjectKey::Expression(Expression::String(field.name.clone()));
                     if let Some(expr) = object.get(&key) {
                         matches.push(QueryResult::Expr(expr.clone()));
                     }
