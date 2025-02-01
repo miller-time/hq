@@ -9,3 +9,6 @@ pub use query::query;
 
 pub mod write;
 pub use write::write;
+
+pub mod delete;
+pub use delete::delete;

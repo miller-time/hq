@@ -20,3 +20,10 @@ fmt_block "fmt_label" {
     first_formatted_field  = "fmt_value"
     second_formatted_field = "second_value"
 }
+
+nested_block {
+    inner_block {
+        value = "deep"
+        another_value = "nested"
+    }
+}

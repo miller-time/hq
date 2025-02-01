@@ -133,9 +133,17 @@ fmt_block "fmt_label" {
     first_formatted_field  = "something_new"
     second_formatted_field = "second_value"
 }
+
+nested_block {
+    inner_block {
+        value = "deep"
+        another_value = "nested"
+    }
+}
 ```
 
-Modifications can also be written directly to a file by passing `-i` (inline) and `-f` (file):
+Modifications can also be written directly to a file by passing `-i`/`--inline`
+and `-f`/`--file`:
 
 ```sh
 $ hq write -i -f example.hcl '.fmt_block.first_formatted_field="something_written_inline"'
@@ -144,4 +152,47 @@ $ hq write -i -f example.hcl '.fmt_block.first_formatted_field="something_writte
 ```sh
 $ hq read -f example.hcl .fmt_block.first_formatted_field
 "something_written_inline"
+```
+
+You can delete entries in an HCL file like so:
+
+```sh
+$ cat example.hcl | hq delete '.nested_block.inner_block.value'
+```
+
+```hcl
+some_attr = {
+    foo = [1, 2]
+    bar = true
+}
+
+some_block "some_block_label" {
+    attr = "value"
+}
+
+some_block "another_block_label" {
+    attr = "another_value"
+}
+
+# this is a block comment
+fmt_block "fmt_label" {
+    # this is a body comment
+    # this is another body comment
+
+    # this is a third body comment
+    first_formatted_field  = "fmt_value"
+    second_formatted_field = "second_value"
+}
+
+nested_block {
+    inner_block {
+        another_value = "nested"
+    }
+}
+```
+
+Or you can delete entries from a file by passing `-i`/`--inline` and `-f`/`--file`:
+
+```sh
+$ hq delete -i -f example.hcl '.nested_block.inner_block.another_value'
 ```
