@@ -62,6 +62,27 @@ enum Command {
         #[arg(required = true, help = "HCL write expression (<FILTER>=<VALUE>)")]
         expr: String,
     },
+    #[command(about = "Remove a value from HCL")]
+    Delete {
+        #[clap(
+            short = 'f',
+            long = "file",
+            value_name = "FILE",
+            help = "HCL file to read from"
+        )]
+        file: Option<String>,
+
+        #[clap(
+            short = 'i',
+            long = "inline",
+            requires = "file",
+            help = "Modify HCL file inline instead of stdout (--file must also be set"
+        )]
+        inline: bool,
+
+        #[arg(value_name = "FILTER", help = "HCL filter expression")]
+        filter: String,
+    },
 }
 
 fn main() -> Result<(), Box<dyn Error>> {
@@ -76,6 +97,13 @@ fn main() -> Result<(), Box<dyn Error>> {
         }
         Some(Command::Write { file, inline, expr }) => {
             write(file, inline, expr)?;
+        }
+        Some(Command::Delete {
+            file,
+            inline,
+            filter,
+        }) => {
+            delete(file, inline, filter)?;
         }
     }
 
@@ -135,6 +163,28 @@ fn write(file: Option<String>, inline: bool, expr: String) -> Result<(), Box<dyn
     let expr: hcl_edit::expr::Expression = new_value.parse()?;
     let fields = hq_rs::parse_filter(filter)?;
     hq_rs::write(fields, &mut body, &expr)?;
+
+    if inline {
+        // When inline is set, write the modified HCL back to the file
+        // file cannot be none here since --inline requires --file
+        fs::write(file.unwrap(), body.to_string())?;
+    } else {
+        // Otherwise, write to stdout
+        print!("{body}");
+        io::stdout().flush()?;
+    }
+
+    Ok(())
+}
+
+fn delete(file: Option<String>, inline: bool, filter: String) -> Result<(), Box<dyn Error>> {
+    let contents = match file {
+        Some(ref file) => fs::read_to_string(file)?,
+        None => read_stdin()?,
+    };
+    let mut body: hcl_edit::structure::Body = contents.parse()?;
+    let fields = hq_rs::parse_filter(&filter)?;
+    hq_rs::delete(fields, &mut body)?;
 
     if inline {
         // When inline is set, write the modified HCL back to the file
