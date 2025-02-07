@@ -61,7 +61,7 @@ fn block_attr() -> Result<(), Box<dyn Error>> {
 
 #[test]
 fn labeled_block_attr() -> Result<(), Box<dyn Error>> {
-    // filter '.variable["my_var"].default'
+    // filter '.variable{"my_var"}.default'
     let mut fields = vec![
         Field::labeled("variable", &["my_var"]),
         Field::new("default"),
@@ -103,7 +103,7 @@ fn block() -> Result<(), Box<dyn Error>> {
 
 #[test]
 fn labeled_block() -> Result<(), Box<dyn Error>> {
-    // filter '.data["another_data_block"]'
+    // filter '.data{"another_data_block"}'
     let mut fields = vec![Field::labeled("data", &["another_data_block"])];
     let body = utilities::read_test_hcl()?;
 
@@ -121,7 +121,7 @@ fn labeled_block() -> Result<(), Box<dyn Error>> {
 
 #[test]
 fn dash_labeled_block() -> Result<(), Box<dyn Error>> {
-    // filter '.module["cool-module"].version'
+    // filter '.module{"cool-module"}.version'
     let mut fields = vec![
         Field::labeled("module", &["cool-module"]),
         Field::new("version"),
