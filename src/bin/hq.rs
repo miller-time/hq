@@ -11,7 +11,11 @@ use clap::{Parser, Subcommand};
 struct Args {
     // the `Read` options are duplicated here because when no command is given
     // then the `read` command is the default and its options come from the root
-    #[arg(value_name = "FILTER", help = "HCL filter expression")]
+    #[arg(
+        value_name = "FILTER",
+        help = "HCL filter expression",
+        long_help = "HCL filter expression\nsee https://docs.rs/hq-rs/latest/hq_rs/ for filter examples"
+    )]
     filter: Option<String>,
 
     #[clap(
@@ -38,7 +42,11 @@ enum Command {
         )]
         file: Option<String>,
 
-        #[arg(value_name = "FILTER", help = "HCL filter expression")]
+        #[arg(
+            value_name = "FILTER",
+            help = "HCL filter expression",
+            long_help = "HCL filter expression\nsee https://docs.rs/hq-rs/latest/hq_rs/ for filter examples"
+        )]
         filter: Option<String>,
     },
     #[command(about = "Write value into HCL")]
@@ -59,7 +67,11 @@ enum Command {
         )]
         inline: bool,
 
-        #[arg(required = true, help = "HCL write expression (<FILTER>=<VALUE>)")]
+        #[arg(
+            required = true,
+            help = "HCL write expression (<FILTER>=<VALUE>)",
+            long_help = "HCL write expression (<FILTER>=<VALUE>)\nsee https://docs.rs/hq-rs/latest/hq_rs/ for filter examples"
+        )]
         expr: String,
     },
     #[command(about = "Remove a value from HCL")]
@@ -76,11 +88,15 @@ enum Command {
             short = 'i',
             long = "inline",
             requires = "file",
-            help = "Modify HCL file inline instead of stdout (--file must also be set"
+            help = "Modify HCL file inline instead of stdout (--file must also be set)"
         )]
         inline: bool,
 
-        #[arg(value_name = "FILTER", help = "HCL filter expression")]
+        #[arg(
+            value_name = "FILTER",
+            help = "HCL filter expression",
+            long_help = "HCL filter expression\nsee https://docs.rs/hq-rs/latest/hq_rs/ for filter examples"
+        )]
         filter: String,
     },
 }
