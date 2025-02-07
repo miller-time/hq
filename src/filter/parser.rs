@@ -55,6 +55,9 @@ pub fn parse_filter(input: &str) -> Result<Vec<Field>, Box<FilterError<Rule>>> {
                     // `name = inner.as_str().to_owned()`
                     inner.as_str().clone_into(&mut name);
                 }
+                Rule::quoted_name => {
+                    inner.as_str().clone_into(&mut name);
+                }
                 Rule::label => {
                     labels.push(inner.as_str().to_owned());
                 }

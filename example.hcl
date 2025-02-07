@@ -27,3 +27,17 @@ nested_block {
         another_value = "nested"
     }
 }
+
+another_block "some_label" {
+    m = {
+        "map@key1": "map@value1",
+        "map@key2": "map@value2",
+    }
+}
+
+another_block "another_label" {
+    m = {
+        "map@key1": "map@value3",
+        "map@key2": "map@value4",
+    }
+}
