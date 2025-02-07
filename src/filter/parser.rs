@@ -9,7 +9,7 @@ pub struct Filter {}
 
 /// one segment of a filter ([`parse_filter`] returns `Vec<Field>`)
 ///
-/// e.g. for the filter `'.foo["bar"].baz'` there are two segments:
+/// e.g. for the filter `'.foo{"bar"}.baz'` there are two segments:
 ///
 /// * the name "foo" and the label "bar"
 /// * the name "baz"
@@ -55,6 +55,9 @@ pub fn parse_filter(input: &str) -> Result<Vec<Field>, Box<FilterError<Rule>>> {
                     // `name = inner.as_str().to_owned()`
                     inner.as_str().clone_into(&mut name);
                 }
+                Rule::quoted_name => {
+                    inner.as_str().clone_into(&mut name);
+                }
                 Rule::label => {
                     labels.push(inner.as_str().to_owned());
                 }
@@ -85,7 +88,7 @@ mod tests {
 
     #[test]
     fn label_filter() -> Result<(), Box<dyn Error>> {
-        let input = ".a_name[\"a_label\"]";
+        let input = ".a_name{\"a_label\"}";
         let expected = vec![Field::labeled("a_name", &["a_label"])];
         let fields = parse_filter(input)?;
         assert_eq!(expected, fields);
@@ -94,7 +97,7 @@ mod tests {
 
     #[test]
     fn traversal_filter() -> Result<(), Box<dyn Error>> {
-        let input = ".a_name[\"a_label\"].another_name[\"another_label\"].third_name";
+        let input = ".a_name{\"a_label\"}.another_name{\"another_label\"}.third_name";
         let expected = vec![
             Field::labeled("a_name", &["a_label"]),
             Field::labeled("another_name", &["another_label"]),
