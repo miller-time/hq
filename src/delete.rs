@@ -25,9 +25,13 @@ impl HclDeleter {
     }
 
     fn next_field(&mut self) {
-        if self.next.is_none() && !self.fields.is_empty() {
+        if !self.fields.is_empty() {
             self.next = Some(self.fields.remove(0));
         }
+    }
+
+    fn should_remove(&self) -> bool {
+        self.fields.is_empty()
     }
 }
 
@@ -37,27 +41,22 @@ impl VisitMut for HclDeleter {
         // create a clone so that we can later mutate `self.next`
         let next = self.next.clone();
         if let Some(ref next) = next {
-            let mut delete_indices = Vec::new();
-            for (index, item) in node.iter().enumerate() {
+            for (index, item) in node.clone().iter().enumerate() {
                 match item {
                     Structure::Attribute(attr) => {
-                        if attr.key.as_str() == next.name {
-                            // this attribute matches, save its index
-                            delete_indices.push(index);
+                        if attr.key.as_str() == next.name && self.should_remove() {
+                            node.remove_attribute(attr.key.as_str());
                         }
                     }
                     Structure::Block(block) => {
-                        if block.ident.as_str() == next.name {
+                        if block.ident.as_str() == next.name && self.should_remove() {
                             if next.labels.is_empty() {
-                                if self.fields.is_empty() {
-                                    // this block matches, save its index
-                                    delete_indices.push(index);
-                                }
+                                node.remove(index);
                             } else {
                                 for filter_label in &next.labels {
                                     for block_label in &block.labels {
                                         if block_label.as_str() == filter_label {
-                                            delete_indices.push(index);
+                                            node.remove_blocks(block.ident.as_str());
                                         }
                                     }
                                 }
@@ -66,27 +65,18 @@ impl VisitMut for HclDeleter {
                     }
                 }
             }
-            // working from the last item, delete items at these indices
-            delete_indices.reverse();
-            for index in delete_indices {
-                node.remove(index);
-            }
 
             // check again for matches, these indicate that there are additional filter segments
             // (because if there was a match above, then the matching item is already gone)
             for block in node.blocks_mut() {
                 if block.ident.as_str() == next.name {
                     if next.labels.is_empty() {
-                        // traverse to the next field
-                        self.next = Some(self.fields.remove(0));
                         // then visit the body
                         self.visit_body_mut(&mut block.body);
                     } else {
                         for filter_label in &next.labels {
                             for block_label in &block.labels {
                                 if block_label.as_str() == filter_label {
-                                    // traverse to the next field
-                                    self.next = Some(self.fields.remove(0));
                                     // then visit the body
                                     self.visit_body_mut(&mut block.body);
                                 }
