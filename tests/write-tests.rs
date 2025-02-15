@@ -6,8 +6,7 @@ use hq_rs::{parser::Field, write};
 fn attr() -> Result<(), Box<dyn Error>> {
     // filter '.version'
     let fields = vec![Field::new("version")];
-    // hcl:
-    // version = "test"
+
     let mut body = utilities::edit_hcl("version = \"test\"")?;
 
     let value: hcl_edit::expr::Expression = "\"new_value\"".parse()?;
@@ -23,8 +22,7 @@ fn attr() -> Result<(), Box<dyn Error>> {
 fn block_attr() -> Result<(), Box<dyn Error>> {
     // filter '.options.enabled'
     let fields = vec![Field::new("options"), Field::new("enabled")];
-    // hcl:
-    // options { enabled = false }
+
     let mut body = utilities::edit_hcl("options { enabled = false }")?;
 
     let value: hcl_edit::expr::Expression = "true".parse()?;
@@ -43,8 +41,7 @@ fn labeled_block_attr() -> Result<(), Box<dyn Error>> {
         Field::labeled("module", &["cool-module"]),
         Field::new("version"),
     ];
-    // hcl:
-    // module "cool-module" { version = "1.0" }
+
     let mut body = utilities::edit_hcl("module \"cool-module\" { version = \"1.0\" }")?;
 
     let value: hcl_edit::expr::Expression = "\"2.0\"".parse()?;

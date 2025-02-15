@@ -68,6 +68,12 @@ impl VisitMut for HclDeleter {
 
             // check again for matches, these indicate that there are additional filter segments
             // (because if there was a match above, then the matching item is already gone)
+            for attr in node.attributes_mut() {
+                if attr.key.as_str() == next.name {
+                    self.visit_attr_mut(attr);
+                }
+            }
+
             for block in node.blocks_mut() {
                 if block.ident.as_str() == next.name {
                     if next.labels.is_empty() {
@@ -84,6 +90,32 @@ impl VisitMut for HclDeleter {
                         }
                     }
                 }
+            }
+        }
+    }
+
+    fn visit_object_mut(&mut self, node: &mut hcl_edit::expr::Object) {
+        self.next_field();
+        if let Some(ref next) = self.next {
+            let mut matches = Vec::new();
+            for (key, _) in node.iter() {
+                // some objects are keyed with an Ident
+                if let Some(id) = key.as_ident() {
+                    if id.as_str() == next.name {
+                        matches.push(key.clone());
+                    }
+                }
+                // some objects are keyed with a String Expression
+                if let Some(expr) = key.as_expr() {
+                    if let Some(expr) = expr.as_str() {
+                        if expr == next.name {
+                            matches.push(key.clone());
+                        }
+                    }
+                }
+            }
+            for key in matches {
+                node.remove(&key);
             }
         }
     }
