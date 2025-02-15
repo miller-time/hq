@@ -76,7 +76,6 @@ fn delete_block_attr() -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
-#[ignore] // Deletion from an object is not yet implement
 #[test]
 fn delete_from_object() -> Result<(), Box<dyn Error>> {
     let fields = vec![Field::new("local"), Field::new("obj"), Field::new("val")];
