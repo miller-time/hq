@@ -18,7 +18,7 @@ struct HclDeleter {
 
 impl HclDeleter {
     fn new(fields: Vec<Field>) -> Self {
-        let next = fields.get(0).cloned();
+        let next = fields.first().cloned();
         HclDeleter {
             fields,
             current_index: 0,
