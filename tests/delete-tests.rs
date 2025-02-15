@@ -83,3 +83,16 @@ fn delete_from_object() -> Result<(), Box<dyn Error>> {
     assert_eq!("local { obj = {} }", body.to_string());
     Ok(())
 }
+
+#[test]
+fn delete_from_nested_object() -> Result<(), Box<dyn Error>> {
+    // filter '.local.obj.obj2.val'
+    let fields = vec![Field::new("local"), Field::new("obj"), Field::new("obj2"), Field::new("val")];
+
+    let mut body = utilities::edit_hcl("local { obj = { obj2 = { val = 5 } } }")?;
+
+    delete(fields, &mut body)?;
+
+    assert_eq!("local { obj = { obj2 = {} } }", body.to_string());
+    Ok(())
+}
