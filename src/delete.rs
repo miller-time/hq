@@ -12,7 +12,7 @@ use crate::parser::Field;
 struct HclDeleter {
     fields: Vec<Field>,
     current_index: usize,
-    next: Option<Field>,
+    current: Option<Field>,
     error: Option<Box<dyn Error>>,
 }
 
@@ -22,18 +22,19 @@ impl HclDeleter {
         HclDeleter {
             fields,
             current_index: 0,
-            next: next,
+            current: next,
             error: None,
         }
     }
 
     fn next_field(&mut self) {
         self.current_index += 1;
-        self.next = self.fields.get(self.current_index).cloned();
+        self.current = self.fields.get(self.current_index).cloned();
     }
 
     fn previous_field(&mut self) {
         self.current_index -= 1;
+        self.current = self.fields.get(self.current_index).cloned();
     }
 
     fn should_remove(&self) -> bool {
@@ -44,8 +45,7 @@ impl HclDeleter {
 impl VisitMut for HclDeleter {
     fn visit_body_mut(&mut self, node: &mut Body) {
         let should_remove = self.should_remove();
-        if let Some(ref next) = self.next.clone() {
-            self.next_field();
+        if let Some(ref next) = self.current.clone() {
             for (index, item) in node.clone().iter().enumerate() {
                 match item {
                     Structure::Attribute(attr) => {
@@ -74,12 +74,15 @@ impl VisitMut for HclDeleter {
             // check again for matches, these indicate that there are additional filter segments
             // (because if there was a match above, then the matching item is already gone)
             for attr in node.attributes_mut() {
+                self.next_field();
                 if attr.key.as_str() == next.name {
                     self.visit_attr_mut(attr);
                 }
+                self.previous_field();
             }
 
             for block in node.blocks_mut() {
+                self.next_field();
                 if block.ident.as_str() == next.name {
                     if next.labels.is_empty() {
                         // then visit the body
@@ -95,15 +98,13 @@ impl VisitMut for HclDeleter {
                         }
                     }
                 }
+                self.previous_field();
             }
         }
-
-        self.previous_field();
     }
 
     fn visit_object_mut(&mut self, node: &mut hcl_edit::expr::Object) {
-        if let Some(ref next) = self.next.clone() {
-            self.next_field();
+        if let Some(ref next) = self.current.clone() {
             let mut matches = Vec::new();
             for (key, _) in node.iter() {
                 // some objects are keyed with an Ident
@@ -121,12 +122,23 @@ impl VisitMut for HclDeleter {
                     }
                 }
             }
+
             for key in matches {
-                node.remove(&key);
+                if self.should_remove() {
+                    node.remove(&key);
+                } else if let Some(val) = node.get_mut(&key) {
+                    // If we haven't reached the end of the query, we need to traverse further into
+                    // the AST to determine what needs to be deleted.
+                    self.next_field();
+                    self.visit_object_value_mut(val);
+                    self.previous_field();
+                } else {
+                    // Every key in this vec was gotten by iterating over this object, so the value
+                    // should exist and this branch should not be reachable.
+                    unreachable!();
+                }
             }
         }
-
-        self.previous_field();
     }
 }
 
