@@ -84,6 +84,13 @@ mod tests {
     }
 
     #[test]
+    fn invalid_name_filter() {
+        let input = ".4foo";
+        let result = parse_filter(input);
+        assert!(result.is_err());
+    }
+
+    #[test]
     fn label_filter() {
         let input = ".a_name{\"a_label\"}";
         let expected = vec![Field::labeled("a_name", &["a_label"])];
