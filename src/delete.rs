@@ -44,24 +44,25 @@ impl HclDeleter {
 
 impl VisitMut for HclDeleter {
     fn visit_body_mut(&mut self, node: &mut Body) {
-        let should_remove = self.should_remove();
         if let Some(ref curr) = self.current.clone() {
-            for (index, item) in node.clone().iter().enumerate() {
+            let mut matching_attr_keys = Vec::new();
+            let mut matching_block_idents = Vec::new();
+            for item in node.iter() {
                 match item {
                     Structure::Attribute(attr) => {
-                        if attr.key.as_str() == curr.name && should_remove {
-                            node.remove_attribute(attr.key.as_str());
+                        if attr.key.as_str() == curr.name {
+                            matching_attr_keys.push(attr.key.to_string());
                         }
                     }
                     Structure::Block(block) => {
-                        if block.ident.as_str() == curr.name && should_remove {
+                        if block.ident.as_str() == curr.name {
                             if curr.labels.is_empty() {
-                                node.remove(index);
+                                matching_block_idents.push(block.ident.to_string());
                             } else {
                                 for filter_label in &curr.labels {
                                     for block_label in &block.labels {
                                         if block_label.as_str() == filter_label {
-                                            node.remove_blocks(block.ident.as_str());
+                                            matching_block_idents.push(block.ident.to_string());
                                         }
                                     }
                                 }
@@ -71,34 +72,27 @@ impl VisitMut for HclDeleter {
                 }
             }
 
-            // check again for matches, these indicate that there are additional filter segments
-            // (because if there was a match above, then the matching item is already gone)
-            for attr in node.attributes_mut() {
-                self.next_field();
-                if attr.key.as_str() == curr.name {
-                    self.visit_attr_mut(attr);
+            for key in matching_attr_keys {
+                if self.should_remove() {
+                    node.remove_attribute(&key);
+                } else {
+                    self.next_field();
+                    // Key was gotten iterating over the node, so it must be a non-None value.
+                    self.visit_attr_mut(node.get_attribute_mut(&key).unwrap());
+                    self.previous_field();
                 }
-                self.previous_field();
             }
 
-            for block in node.blocks_mut() {
-                self.next_field();
-                if block.ident.as_str() == curr.name {
-                    if curr.labels.is_empty() {
-                        // then visit the body
-                        self.visit_body_mut(&mut block.body);
-                    } else {
-                        for filter_label in &curr.labels {
-                            for block_label in &block.labels {
-                                if block_label.as_str() == filter_label {
-                                    // then visit the body
-                                    self.visit_body_mut(&mut block.body);
-                                }
-                            }
-                        }
+            for ident in matching_block_idents {
+                if self.should_remove() {
+                    node.remove_blocks(&ident);
+                } else {
+                    for block in node.get_blocks_mut(&ident) {
+                        self.next_field();
+                        self.visit_block_mut(block);
+                        self.previous_field();
                     }
                 }
-                self.previous_field();
             }
         }
     }
