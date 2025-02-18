@@ -73,38 +73,40 @@ pub fn parse_filter(input: &str) -> Result<Vec<Field>, Box<FilterError<Rule>>> {
 
 #[cfg(test)]
 mod tests {
-    use std::error::Error;
-
     use super::*;
 
     #[test]
-    fn name_filter() -> Result<(), Box<dyn Error>> {
+    fn name_filter() {
         let input = ".a_name";
         let expected = vec![Field::new("a_name")];
-        let fields = parse_filter(input)?;
+        let fields = parse_filter(input).expect("parse error");
         assert_eq!(expected, fields);
-        Ok(())
     }
 
     #[test]
-    fn label_filter() -> Result<(), Box<dyn Error>> {
+    fn invalid_name_filter() {
+        let input = ".4foo";
+        let result = parse_filter(input);
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn label_filter() {
         let input = ".a_name{\"a_label\"}";
         let expected = vec![Field::labeled("a_name", &["a_label"])];
-        let fields = parse_filter(input)?;
+        let fields = parse_filter(input).expect("parse error");
         assert_eq!(expected, fields);
-        Ok(())
     }
 
     #[test]
-    fn traversal_filter() -> Result<(), Box<dyn Error>> {
+    fn traversal_filter() {
         let input = ".a_name{\"a_label\"}.another_name{\"another_label\"}.third_name";
         let expected = vec![
             Field::labeled("a_name", &["a_label"]),
             Field::labeled("another_name", &["another_label"]),
             Field::new("third_name"),
         ];
-        let fields = parse_filter(input)?;
+        let fields = parse_filter(input).expect("parse error");
         assert_eq!(expected, fields);
-        Ok(())
     }
 }
