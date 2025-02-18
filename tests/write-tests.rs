@@ -1,57 +1,50 @@
-use std::error::Error;
-
 use hq_rs::{parser::Field, write};
 
 #[test]
-fn attr() -> Result<(), Box<dyn Error>> {
+fn attr() {
     // filter '.version'
     let fields = vec![Field::new("version")];
 
-    let mut body = utilities::edit_hcl("version = \"test\"")?;
+    let mut body = utilities::edit_hcl("version = \"test\"").expect("hcl error");
 
-    let value: hcl_edit::expr::Expression = "\"new_value\"".parse()?;
+    let value: hcl_edit::expr::Expression = "\"new_value\"".parse().expect("parse error");
 
-    write(fields, &mut body, &value)?;
+    write(fields, &mut body, &value).expect("write error");
 
     assert_eq!("version = \"new_value\"", body.to_string());
-
-    Ok(())
 }
 
 #[test]
-fn block_attr() -> Result<(), Box<dyn Error>> {
+fn block_attr() {
     // filter '.options.enabled'
     let fields = vec![Field::new("options"), Field::new("enabled")];
 
-    let mut body = utilities::edit_hcl("options { enabled = false }")?;
+    let mut body = utilities::edit_hcl("options { enabled = false }").expect("hcl error");
 
-    let value: hcl_edit::expr::Expression = "true".parse()?;
+    let value: hcl_edit::expr::Expression = "true".parse().expect("parse error");
 
-    write(fields, &mut body, &value)?;
+    write(fields, &mut body, &value).expect("write error");
 
     assert_eq!("options { enabled = true }", body.to_string());
-
-    Ok(())
 }
 
 #[test]
-fn labeled_block_attr() -> Result<(), Box<dyn Error>> {
+fn labeled_block_attr() {
     // filter '.module{"cool-module"}.version'
     let fields = vec![
         Field::labeled("module", &["cool-module"]),
         Field::new("version"),
     ];
 
-    let mut body = utilities::edit_hcl("module \"cool-module\" { version = \"1.0\" }")?;
+    let mut body =
+        utilities::edit_hcl("module \"cool-module\" { version = \"1.0\" }").expect("hcl error");
 
-    let value: hcl_edit::expr::Expression = "\"2.0\"".parse()?;
+    let value: hcl_edit::expr::Expression = "\"2.0\"".parse().expect("parse error");
 
-    write(fields, &mut body, &value)?;
+    write(fields, &mut body, &value).expect("write error");
 
     assert_eq!(
         "module \"cool-module\" { version = \"2.0\" }",
         body.to_string()
     );
-
-    Ok(())
 }
