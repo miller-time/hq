@@ -1,5 +1,5 @@
 filter      = _{ SOI ~ field ~ (field)* ~ EOI }
-field       =  { (index | prop) ~ labels? }
+field       =  { prop ~ labels? }
 index       = _{ "[" ~ quote ~ quoted_name ~ quote ~ "]" }
 quote       = _{ "\"" | "'" }
 quoted_name =  { quoted_char+ }
