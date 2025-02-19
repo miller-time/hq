@@ -1,4 +1,7 @@
-use pest::Parser;
+use pest::{
+    error::{Error, ErrorVariant},
+    Parser,
+};
 use pest_derive::Parser;
 
 use super::error::FilterError;
@@ -17,8 +20,10 @@ pub struct Filter {}
 pub struct Field {
     /// an attribute or block name
     pub name: String,
-    /// block labels
+    /// block labels or object keys
     pub labels: Vec<String>,
+    /// a numeric index on an array type
+    pub index: Option<usize>,
 }
 
 impl Field {
@@ -26,6 +31,7 @@ impl Field {
         Field {
             name: name.to_string(),
             labels: Vec::new(),
+            index: None,
         }
     }
 
@@ -33,6 +39,15 @@ impl Field {
         Field {
             name: name.to_string(),
             labels: labels.iter().map(|label| label.to_string()).collect(),
+            index: None,
+        }
+    }
+
+    pub fn indexed(name: &str, index: usize) -> Self {
+        Field {
+            name: name.to_string(),
+            labels: Vec::new(),
+            index: Some(index),
         }
     }
 }
@@ -46,6 +61,7 @@ pub fn parse_filter(input: &str) -> Result<Vec<Field>, Box<FilterError<Rule>>> {
     for pair in pairs {
         let mut name = String::new();
         let mut labels = Vec::new();
+        let mut index = None;
 
         let inner_pairs = pair.into_inner();
         for inner in inner_pairs {
@@ -61,11 +77,37 @@ pub fn parse_filter(input: &str) -> Result<Vec<Field>, Box<FilterError<Rule>>> {
                 Rule::label => {
                     labels.push(inner.as_str().to_owned());
                 }
-                _ => {}
+                Rule::numeric_index => {
+                    if let Ok(i) = inner.as_str().parse::<usize>() {
+                        index = Some(i);
+                    } else {
+                        return Err(Error::new_from_span(
+                            ErrorVariant::ParsingError {
+                                positives: Vec::new(),
+                                negatives: vec![inner.as_rule()],
+                            },
+                            inner.as_span(),
+                        )
+                        .into());
+                    }
+                }
+                rule => {
+                    return Err(Error::new_from_span(
+                        ErrorVariant::CustomError {
+                            message: std::format!("not implemented: {:?}", rule),
+                        },
+                        inner.as_span(),
+                    )
+                    .into())
+                }
             }
         }
         if !name.is_empty() {
-            fields.push(Field { name, labels });
+            fields.push(Field {
+                name,
+                labels,
+                index,
+            });
         }
     }
     Ok(fields)
@@ -94,6 +136,14 @@ mod tests {
     fn label_filter() {
         let input = ".a_name{\"a_label\"}";
         let expected = vec![Field::labeled("a_name", &["a_label"])];
+        let fields = parse_filter(input).expect("parse error");
+        assert_eq!(expected, fields);
+    }
+
+    #[test]
+    fn numeric_index() {
+        let input = ".a_name[0]";
+        let expected = vec![Field::indexed("a_name", 0)];
         let fields = parse_filter(input).expect("parse error");
         assert_eq!(expected, fields);
     }
