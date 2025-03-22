@@ -106,7 +106,7 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     match args.command {
         None => {
-            read(args.filter, args.file)?;
+            read(args.file, args.filter)?;
         }
         Some(Command::Read { file, filter }) => {
             read(file, filter)?;
