@@ -61,7 +61,7 @@ fn insert() {
     write(fields, &mut body, &value);
 
     assert_eq!(
-        "options {\n attr = \"value\" \nnew_attr = \"new_value\"\n}",
+        "options {\n attr = \"value\" \n new_attr = \"new_value\" \n}",
         body.to_string()
     );
 }

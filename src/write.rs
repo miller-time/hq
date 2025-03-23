@@ -4,7 +4,7 @@ use hcl_edit::{
     expr::Expression,
     structure::{Attribute, Body, Structure},
     visit_mut::VisitMut,
-    Decorated, Ident,
+    Decorate, Decorated, Ident,
 };
 
 use crate::parser::Field;
@@ -51,9 +51,13 @@ impl VisitMut for HclEditor<'_> {
         if let Some(current) = self.current.clone() {
             let mut matching_attr_keys = Vec::new();
             let mut matching_block_idents = Vec::new();
+            // save this in case we are adding new attributes
+            let mut decor = None;
             for item in node.iter() {
                 match item {
                     Structure::Attribute(attr) => {
+                        // copy existing attribute's decor
+                        decor = Some(attr.decor().clone());
                         if attr.key.as_str() == current.name {
                             matching_attr_keys.push(attr.key.to_string());
                         }
@@ -92,7 +96,9 @@ impl VisitMut for HclEditor<'_> {
 
             if self.should_edit() {
                 let key = Decorated::new(Ident::new(current.name));
-                let attr = Attribute::new(key, self.value.clone());
+                // copy existing attribute's decor when creating the new attribute
+                let decor = decor.unwrap_or_default();
+                let attr = Attribute::new(key, self.value.clone()).decorated(decor);
                 node.insert(node.len(), attr);
             }
         }
