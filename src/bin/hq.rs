@@ -178,7 +178,7 @@ fn write(file: Option<String>, inline: bool, expr: String) -> Result<(), Box<dyn
     let new_value = parts[1];
     let expr: hcl_edit::expr::Expression = new_value.parse()?;
     let fields = hq_rs::parse_filter(filter)?;
-    hq_rs::write(fields, &mut body, &expr)?;
+    hq_rs::write(fields, &mut body, &expr);
 
     if inline {
         // When inline is set, write the modified HCL back to the file

@@ -18,11 +18,11 @@ struct HclDeleter {
 
 impl HclDeleter {
     fn new(fields: Vec<Field>) -> Self {
-        let next = fields.first().cloned();
+        let current = fields.first().cloned();
         HclDeleter {
             fields,
             current_index: 0,
-            current: next,
+            current,
             error: None,
         }
     }
@@ -44,22 +44,22 @@ impl HclDeleter {
 
 impl VisitMut for HclDeleter {
     fn visit_body_mut(&mut self, node: &mut Body) {
-        if let Some(ref curr) = self.current.clone() {
+        if let Some(current) = self.current.clone() {
             let mut matching_attr_keys = Vec::new();
             let mut matching_block_idents = Vec::new();
             for item in node.iter() {
                 match item {
                     Structure::Attribute(attr) => {
-                        if attr.key.as_str() == curr.name {
+                        if attr.key.as_str() == current.name {
                             matching_attr_keys.push(attr.key.to_string());
                         }
                     }
                     Structure::Block(block) => {
-                        if block.ident.as_str() == curr.name {
-                            if curr.labels.is_empty() {
+                        if block.ident.as_str() == current.name {
+                            if current.labels.is_empty() {
                                 matching_block_idents.push(block.ident.to_string());
                             } else {
-                                for filter_label in &curr.labels {
+                                for filter_label in &current.labels {
                                     for block_label in &block.labels {
                                         if block_label.as_str() == filter_label {
                                             matching_block_idents.push(block.ident.to_string());
@@ -98,19 +98,19 @@ impl VisitMut for HclDeleter {
     }
 
     fn visit_object_mut(&mut self, node: &mut hcl_edit::expr::Object) {
-        if let Some(ref curr) = self.current.clone() {
+        if let Some(current) = self.current.clone() {
             let mut matches = Vec::new();
             for (key, _) in node.iter() {
                 // some objects are keyed with an Ident
                 if let Some(id) = key.as_ident() {
-                    if id.as_str() == curr.name {
+                    if id.as_str() == current.name {
                         matches.push(key.clone());
                     }
                 }
                 // some objects are keyed with a String Expression
                 if let Some(expr) = key.as_expr() {
                     if let Some(expr) = expr.as_str() {
-                        if expr == curr.name {
+                        if expr == current.name {
                             matches.push(key.clone());
                         }
                     }
