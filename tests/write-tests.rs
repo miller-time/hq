@@ -9,7 +9,7 @@ fn attr() {
 
     let value: hcl_edit::expr::Expression = "\"new_value\"".parse().expect("parse error");
 
-    write(fields, &mut body, &value).expect("write error");
+    write(fields, &mut body, &value);
 
     assert_eq!("version = \"new_value\"", body.to_string());
 }
@@ -23,7 +23,7 @@ fn block_attr() {
 
     let value: hcl_edit::expr::Expression = "true".parse().expect("parse error");
 
-    write(fields, &mut body, &value).expect("write error");
+    write(fields, &mut body, &value);
 
     assert_eq!("options { enabled = true }", body.to_string());
 }
@@ -41,7 +41,7 @@ fn labeled_block_attr() {
 
     let value: hcl_edit::expr::Expression = "\"2.0\"".parse().expect("parse error");
 
-    write(fields, &mut body, &value).expect("write error");
+    write(fields, &mut body, &value);
 
     assert_eq!(
         "module \"cool-module\" { version = \"2.0\" }",

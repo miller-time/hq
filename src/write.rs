@@ -1,7 +1,5 @@
 //! use the [`hcl-edit`][hcl_edit] crate to modify HCL documents
 
-use std::{error::Error, fmt};
-
 use hcl_edit::{
     expr::Expression,
     structure::{Body, Structure},
@@ -10,37 +8,11 @@ use hcl_edit::{
 
 use crate::parser::Field;
 
-#[derive(Debug)]
-pub struct WriteError {
-    reason: String,
-}
-
-impl WriteError {
-    fn new(reason: &str) -> Self {
-        WriteError {
-            reason: reason.to_string(),
-        }
-    }
-}
-
-impl fmt::Display for WriteError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "failed to write HCL: {}", self.reason)
-    }
-}
-
-impl Error for WriteError {}
-
-fn err(reason: &str) -> Box<WriteError> {
-    Box::new(WriteError::new(reason))
-}
-
 struct HclEditor<'a> {
     fields: Vec<Field>,
     current_index: usize,
     current: Option<Field>,
     value: &'a Expression,
-    error: Option<Box<WriteError>>,
 }
 
 impl<'a> HclEditor<'a> {
@@ -51,7 +23,6 @@ impl<'a> HclEditor<'a> {
             current_index: 0,
             current,
             value,
-            error: None,
         }
     }
 
@@ -134,15 +105,7 @@ impl VisitMut for HclEditor<'_> {
 
 /// given a vector of [`Field`]s, write `value` to replace the existing
 /// [`Expression`] that matches that filter
-pub fn write(
-    fields: Vec<Field>,
-    body: &mut Body,
-    value: &Expression,
-) -> Result<(), Box<WriteError>> {
+pub fn write(fields: Vec<Field>, body: &mut Body, value: &Expression) {
     let mut visitor = HclEditor::new(fields, value);
     visitor.visit_body_mut(body);
-    if let Some(err) = visitor.error {
-        return Err(err);
-    }
-    Ok(())
 }
