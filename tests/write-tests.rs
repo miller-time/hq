@@ -48,3 +48,20 @@ fn labeled_block_attr() {
         body.to_string()
     );
 }
+
+#[test]
+fn insert() {
+    // filter '.options.new_attr'
+    let fields = vec![Field::new("options"), Field::new("new_attr")];
+
+    let mut body = utilities::edit_hcl("options { attr = \"value\" }").expect("hcl error");
+
+    let value: hcl_edit::expr::Expression = "\"new_value\"".parse().expect("parse error");
+
+    write(fields, &mut body, &value);
+
+    assert_eq!(
+        "options {\n attr = \"value\" \nnew_attr = \"new_value\"\n}",
+        body.to_string()
+    );
+}

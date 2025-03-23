@@ -2,8 +2,9 @@
 
 use hcl_edit::{
     expr::Expression,
-    structure::{Body, Structure},
+    structure::{Attribute, Body, Structure},
     visit_mut::VisitMut,
+    Decorated, Ident,
 };
 
 use crate::parser::Field;
@@ -87,6 +88,12 @@ impl VisitMut for HclEditor<'_> {
                     self.visit_body_mut(&mut block.body);
                     self.previous_field();
                 }
+            }
+
+            if self.should_edit() {
+                let key = Decorated::new(Ident::new(current.name));
+                let attr = Attribute::new(key, self.value.clone());
+                node.insert(node.len(), attr);
             }
         }
     }
